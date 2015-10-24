@@ -26,18 +26,24 @@ Shader "Hidden/Kino/Bloom"
     {
         _MainTex("-", 2D) = "" {}
         _BlurTex("-", 2D) = "" {}
+        _AccTex("-", 2D) = "" {}
     }
 
     CGINCLUDE
 
     #include "UnityCG.cginc"
 
+    #pragma multi_compile _ TEMP_FILTER
+
     sampler2D _MainTex;
     float2 _MainTex_TexelSize;
 
     sampler2D _BlurTex;
+    sampler2D _AccTex;
+
     float _Threshold;
     float _Intensity;
+    float _TempFilter;
 
     // Quarter downsampler
     half4 frag_downsample(v2f_img i) : SV_Target
@@ -53,9 +59,15 @@ Shader "Hidden/Kino/Bloom"
 
     half4 frag_downsample_last(v2f_img i) : SV_Target
     {
-        half4 s = frag_downsample(i);
-        half l = Luminance(s.rgb);
-        return s * smoothstep(_Threshold, _Threshold * 1.5, l);
+        half4 cs = frag_downsample(i);
+        half lm = Luminance(cs.rgb);
+        half4 co = cs * smoothstep(_Threshold, _Threshold * 1.5, lm);
+#if TEMP_FILTER
+        half4 cp = tex2D(_AccTex, i.uv);
+        return lerp(co, cp, _TempFilter);
+#else
+        return co;
+#endif
     }
 
     // 13-tap box filter with linear sampling

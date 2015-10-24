@@ -58,13 +58,22 @@ namespace Kino
             set { _intensity = value; }
         }
 
+        // Temporal filtering
+        [SerializeField, Range(0, 1.0f)]
+        float _temporalFiltering = 0.0f;
+
+        public float temporalFiltering {
+            get { return _temporalFiltering; }
+            set { _temporalFiltering = value; }
+        }
+
         #endregion
 
         #region Private Properties
 
         [SerializeField] Shader _shader;
-
         Material _material;
+        RenderTexture _accBuffer;
 
         #endregion
 
@@ -103,10 +112,37 @@ namespace Kino
             var rt1 = RenderTexture.GetTemporary(blurWidth, blurHeight, 0, fmt);
             var rt2 = RenderTexture.GetTemporary(blurWidth, blurHeight, 0, fmt);
 
+            // Enable the temporal filter if available.
+            if (_accBuffer && _temporalFiltering > 0.0f)
+            {
+                _material.EnableKeyword("TEMP_FILTER");
+                _material.SetTexture("_AccTex", _accBuffer);
+                var coeff = 1.0f - Mathf.Exp(_temporalFiltering * -5);
+                _material.SetFloat("_TempFilter", coeff);
+            }
+            else
+            {
+                _material.DisableKeyword("TEMP_FILTER");
+            }
+
             // Shrink to the size of the blur buffer with the downsampler.
             // This time it applies the threshold function.
             Graphics.Blit(rt, rt1, _material, 1);
             if (rt != source) RenderTexture.ReleaseTemporary(rt);
+
+            // The accumulation buffer is no longer needed.
+            if (_accBuffer)
+            {
+                RenderTexture.ReleaseTemporary(_accBuffer);
+                _accBuffer = null;
+            }
+
+            // Make a copy of the shrinked image.
+            if (_temporalFiltering > 0.0f)
+            {
+                _accBuffer = RenderTexture.GetTemporary(blurWidth, blurHeight, 0, fmt);
+                Graphics.Blit(rt1, _accBuffer);
+            }
 
             // Apply the separable box filter repeatedly.
             for (var i = 0; i < 4; i++)
