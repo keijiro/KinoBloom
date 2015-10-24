@@ -85,8 +85,8 @@ namespace Kino
             var fmt = RenderTextureFormat.DefaultHDR;
 
             // Width/height of the blur buffer
-            var blurHeight = (int)(Screen.width / _radius);
-            var blurWidth = blurHeight * Screen.width / Screen.height;
+            var blurHeight = (int)(source.width / _radius);
+            var blurWidth = blurHeight * source.width / source.height;
 
             // Set up the material object.
             if (_material == null)
