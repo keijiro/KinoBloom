@@ -30,14 +30,19 @@ namespace Kino
     [CustomEditor(typeof(Bloom))]
     public class Bloomditor : Editor
     {
-        SerializedProperty _radius;
+        SerializedProperty _radius1;
+        SerializedProperty _radius2;
+        SerializedProperty _intensity1;
+        SerializedProperty _intensity2;
         SerializedProperty _threshold;
-        SerializedProperty _intensity;
         SerializedProperty _temporalFiltering;
 
-        static string configWarning =
+        static string _configWarning =
             "This effect only works properly with HDR and linear rendering. " +
             "It's strongly recommended to enable these options.";
+
+        static GUIContent _textRadius = new GUIContent("Radius");
+        static GUIContent _textIntensity = new GUIContent("Intensity");
 
         bool CheckConfig()
         {
@@ -51,9 +56,11 @@ namespace Kino
 
         void OnEnable()
         {
-            _radius = serializedObject.FindProperty("_radius");
+            _radius1 = serializedObject.FindProperty("_radius1");
+            _radius2 = serializedObject.FindProperty("_radius2");
+            _intensity1 = serializedObject.FindProperty("_intensity1");
+            _intensity2 = serializedObject.FindProperty("_intensity2");
             _threshold = serializedObject.FindProperty("_threshold");
-            _intensity = serializedObject.FindProperty("_intensity");
             _temporalFiltering = serializedObject.FindProperty("_temporalFiltering");
         }
 
@@ -62,11 +69,21 @@ namespace Kino
             serializedObject.Update();
 
             if (!CheckConfig())
-                EditorGUILayout.HelpBox(configWarning, MessageType.Warning);
+                EditorGUILayout.HelpBox(_configWarning, MessageType.Warning);
 
-            EditorGUILayout.PropertyField(_radius);
+            EditorGUILayout.LabelField("Fringe (small bloom)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_radius1, _textRadius);
+            EditorGUILayout.PropertyField(_intensity1, _textIntensity);
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Diffusion (large bloom)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_radius2, _textRadius);
+            EditorGUILayout.PropertyField(_intensity2, _textIntensity);
+
+            EditorGUILayout.Space();
+
             EditorGUILayout.PropertyField(_threshold);
-            EditorGUILayout.PropertyField(_intensity);
             EditorGUILayout.PropertyField(_temporalFiltering);
 
             serializedObject.ApplyModifiedProperties();

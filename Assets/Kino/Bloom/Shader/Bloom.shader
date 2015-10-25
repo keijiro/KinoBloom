@@ -26,25 +26,26 @@ Shader "Hidden/Kino/Bloom"
     Properties
     {
         _MainTex("-", 2D) = "" {}
-        _BlurTex("-", 2D) = "" {}
         _AccTex("-", 2D) = "" {}
+        _Blur1Tex("-", 2D) = "" {}
+        _Blur2Tex("-", 2D) = "" {}
     }
 
     CGINCLUDE
 
     #include "UnityCG.cginc"
 
-    #pragma multi_compile _ TEMP_FILTER
-
     sampler2D _MainTex;
     float2 _MainTex_TexelSize;
 
-    sampler2D _BlurTex;
     sampler2D _AccTex;
+    sampler2D _Blur1Tex;
+    sampler2D _Blur2Tex;
 
     float _Threshold;
-    float _Intensity;
     float _TempFilter;
+    float _Intensity1;
+    float _Intensity2;
 
     // Quarter downsampler
     half4 frag_downsample(v2f_img i) : SV_Target
@@ -58,17 +59,47 @@ Shader "Hidden/Kino/Bloom"
         return s * 0.25;
     }
 
-    half4 frag_downsample_last(v2f_img i) : SV_Target
+    // Thresholding filter
+    half4 frag_threshold(v2f_img i) : SV_Target
     {
-        half4 cs = frag_downsample(i);
+        half4 cs = tex2D(_MainTex, i.uv);
         half lm = Luminance(cs.rgb);
-        half4 co = cs * smoothstep(_Threshold, _Threshold * 1.5, lm);
-#if TEMP_FILTER
+        return cs * smoothstep(_Threshold, _Threshold * 1.5, lm);
+    }
+
+    // Thresholding filter with temporal filtering
+    half4 frag_threshold_temp(v2f_img i) : SV_Target
+    {
+        half4 co = frag_threshold(i);
         half4 cp = tex2D(_AccTex, i.uv);
         return lerp(co, cp, _TempFilter);
-#else
-        return co;
-#endif
+    }
+
+    // 9-tap Gaussian filter with linear sampling
+    // http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+    half4 gaussian_filter(float2 uv, float2 stride)
+    {
+        half4 s = tex2D(_MainTex, uv) * 0.227027027;
+
+        float2 d1 = stride * 1.3846153846;
+        s += tex2D(_MainTex, uv + d1) * 0.3162162162;
+        s += tex2D(_MainTex, uv - d1) * 0.3162162162;
+
+        float2 d2 = stride * 3.2307692308;
+        s += tex2D(_MainTex, uv + d2) * 0.0702702703;
+        s += tex2D(_MainTex, uv - d2) * 0.0702702703;
+
+        return s;
+    }
+
+    half4 frag_gaussian_blur_h(v2f_img i) : SV_Target
+    {
+        return gaussian_filter(i.uv, float2(_MainTex_TexelSize.x, 0));
+    }
+
+    half4 frag_gaussian_blur_v(v2f_img i) : SV_Target
+    {
+        return gaussian_filter(i.uv, float2(0, _MainTex_TexelSize.y));
     }
 
     // 13-tap box filter with linear sampling
@@ -91,13 +122,12 @@ Shader "Hidden/Kino/Bloom"
         return s * 2 / 13;
     }
 
-    // Separable blur filters
-    half4 frag_blur_h(v2f_img i) : SV_Target
+    half4 frag_box_blur_h(v2f_img i) : SV_Target
     {
         return box_filter(i.uv, float2(_MainTex_TexelSize.x, 0));
     }
 
-    half4 frag_blur_v(v2f_img i) : SV_Target
+    half4 frag_box_blur_v(v2f_img i) : SV_Target
     {
         return box_filter(i.uv, float2(0, _MainTex_TexelSize.y));
     }
@@ -107,9 +137,10 @@ Shader "Hidden/Kino/Bloom"
     {
         half4 cs = tex2D(_MainTex, i.uv);
         half3 c1 = LinearToGammaSpace(cs.rgb);
-        half3 c2 = LinearToGammaSpace(tex2D(_BlurTex, i.uv).rgb);
-        half3 co = GammaToLinearSpace(c1 + c2 * _Intensity);
-        return half4(co, cs.a);
+        half3 c2 = LinearToGammaSpace(tex2D(_Blur1Tex, i.uv).rgb);
+        half3 c3 = LinearToGammaSpace(tex2D(_Blur2Tex, i.uv).rgb);
+        half3 co = c1 + c2 * _Intensity1 + c3 * _Intensity2;
+        return half4(GammaToLinearSpace(co), cs.a);
     }
 
     ENDCG
@@ -129,7 +160,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_downsample_last
+            #pragma fragment frag_threshold
             #pragma target 3.0
             ENDCG
         }
@@ -138,7 +169,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_blur_h
+            #pragma fragment frag_threshold_temp
             #pragma target 3.0
             ENDCG
         }
@@ -147,7 +178,34 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_blur_v
+            #pragma fragment frag_gaussian_blur_h
+            #pragma target 3.0
+            ENDCG
+        }
+        Pass
+        {
+            ZTest Always Cull Off ZWrite Off
+            CGPROGRAM
+            #pragma vertex vert_img
+            #pragma fragment frag_gaussian_blur_v
+            #pragma target 3.0
+            ENDCG
+        }
+        Pass
+        {
+            ZTest Always Cull Off ZWrite Off
+            CGPROGRAM
+            #pragma vertex vert_img
+            #pragma fragment frag_box_blur_h
+            #pragma target 3.0
+            ENDCG
+        }
+        Pass
+        {
+            ZTest Always Cull Off ZWrite Off
+            CGPROGRAM
+            #pragma vertex vert_img
+            #pragma fragment frag_box_blur_v
             #pragma target 3.0
             ENDCG
         }
