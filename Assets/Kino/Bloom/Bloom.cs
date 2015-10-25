@@ -33,8 +33,8 @@ namespace Kino
         #region Public Properties
 
         // Radius
-        [SerializeField, Range(2, 40)]
-        float _radius = 10.0f;
+        [SerializeField, Range(1, 10)]
+        float _radius = 4.0f;
 
         public float radius {
             get { return _radius; }
@@ -86,7 +86,7 @@ namespace Kino
             var fmt = RenderTextureFormat.DefaultHDR;
 
             // Width/height of the blur buffer
-            var blurHeight = (int)(source.width / _radius);
+            var blurHeight = (int)(256 / _radius);
             var blurWidth = blurHeight * source.width / source.height;
 
             // Set up the material object.
