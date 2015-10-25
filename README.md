@@ -7,15 +7,15 @@ KinoBloom
 
 *Bloom* has some special features:
 
-- Two different types of filter kernels: fringe blur (small gaussian filter)
-  and diffusion blur (large box filter).
-- Temporal low-pass filtering: rejects brightly oscillating pixels to eliminate
-  unpleasant flicker.
+- Two different types of blur filters: *fringe* (small gaussian filter) and
+  *diffusion* (large box filter).
+- Temporal low-pass filtering: rejects intensely oscillating pixels to
+  eliminate unpleasant flicker.
 
 System Requirements
 -------------------
 
-*Bloom* is optimized for HDR and linear rendering. Altough it can run without
+*Bloom* is optimized for HDR and linear rendering. Although it can run without
 these features, it's strongly recommended to enable them for optimal quality.
 
 Because of this requirement, it's not recommended to use on mobile platforms
