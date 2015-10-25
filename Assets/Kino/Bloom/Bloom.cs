@@ -187,8 +187,11 @@ namespace Kino
             }
 
             // Small bloom: apply the separable Gaussian filter.
-            Graphics.Blit(rt1, rt2, _material, 3); // horizontal
-            Graphics.Blit(rt2, rt1, _material, 4); // vertical
+            for (var i = 0; i < 2; i++)
+            {
+                Graphics.Blit(rt1, rt2, _material, 3); // horizontal
+                Graphics.Blit(rt2, rt1, _material, 4); // vertical
+            }
 
             // Large bloom: apply the separable box filter repeatedly.
             for (var i = 0; i < 4; i++)
