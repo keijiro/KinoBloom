@@ -117,7 +117,7 @@ namespace Kino
             {
                 _material.EnableKeyword("TEMP_FILTER");
                 _material.SetTexture("_AccTex", _accBuffer);
-                var coeff = 1.0f - Mathf.Exp(_temporalFiltering * -5);
+                var coeff = 1.0f - Mathf.Exp(_temporalFiltering * -4);
                 _material.SetFloat("_TempFilter", coeff);
             }
             else
