@@ -34,6 +34,20 @@ namespace Kino
         SerializedProperty _intensity;
         SerializedProperty _temporalFiltering;
 
+        static string configWarning =
+            "This effect only works properly with HDR and linear rendering. " +
+            "It's strongly recommended to enable these options.";
+
+        bool CheckConfig()
+        {
+            // Check if HDR rendering is enabled.
+            var cam = ((Bloom)target).GetComponent<Camera>();
+            if (!cam.hdr) return false;
+
+            // check if linear rendering is enabled.
+            return QualitySettings.activeColorSpace == ColorSpace.Linear;
+        }
+
         void OnEnable()
         {
             _radius = serializedObject.FindProperty("_radius");
@@ -45,6 +59,9 @@ namespace Kino
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+
+            if (!CheckConfig())
+                EditorGUILayout.HelpBox(configWarning, MessageType.Warning);
 
             EditorGUILayout.PropertyField(_radius);
             EditorGUILayout.PropertyField(_threshold);
