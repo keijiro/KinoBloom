@@ -127,89 +127,99 @@ namespace Kino
             var blur1Width = blur1Height * source.width / source.height;
             var blur2Width = blur2Height * source.width / source.height;
 
-            // Allocate the blur buffers.
-            var rt1 = GetTempBuffer(blur1Width, blur1Height);
-            var rt2 = GetTempBuffer(blur1Width, blur1Height);
-            var rt3 = GetTempBuffer(blur2Width, blur2Height);
-            var rt4 = GetTempBuffer(blur2Width, blur2Height);
+            // Blur image buffers
+            RenderTexture rt1 = null, rt2 = null;
 
-            // Small bloom: shrink the source image and apply the threshold.
-            RenderTexture rt = source;
-
-            while (rt.height > blur1Height * 4) // quater downsampling
+            // Small bloom
+            if (_intensity1 > 0.0f)
             {
-                var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
-                Graphics.Blit(rt, rt_next, _material, 0);
+                var rt = source;
+
+                // Shrink the source image with the quater downsampler
+                while (rt.height > blur1Height * 4)
+                {
+                    var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
+                    Graphics.Blit(rt, rt_next, _material, 0);
+                    if (rt != source) ReleaseTempBuffer(rt);
+                    rt = rt_next;
+                }
+
+                // Allocate the blur buffer.
+                rt1 = GetTempBuffer(blur1Width, blur1Height);
+
+                // Shrink the source image and apply the threshold.
+                Graphics.Blit(rt, rt1, _material, 1);
                 if (rt != source) ReleaseTempBuffer(rt);
-                rt = rt_next;
+
+                // Apply the separable Gaussian filter.
+                var rtb = GetTempBuffer(blur1Width, blur1Height);
+                for (var i = 0; i < 2; i++)
+                {
+                    Graphics.Blit(rt1, rtb, _material, 3);
+                    Graphics.Blit(rtb, rt1, _material, 4);
+                }
+                ReleaseTempBuffer(rtb);
             }
 
-            Graphics.Blit(rt, rt1, _material, 1); // thresholding + downsampling
-
-            if (rt != source) ReleaseTempBuffer(rt);
-
-            // Large bloom: shrink, threshold and temporal filtering
-            rt = source;
-
-            while (rt.height > blur2Height * 4) // quater downsampling
+            // Large bloom
+            if (_intensity2 > 0.0f)
             {
-                var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
-                Graphics.Blit(rt, rt_next, _material, 0);
+                var rt = source;
+
+                // Shrink the source image with the quater downsampler
+                while (rt.height > blur2Height * 4)
+                {
+                    var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
+                    Graphics.Blit(rt, rt_next, _material, 0);
+                    if (rt != source) ReleaseTempBuffer(rt);
+                    rt = rt_next;
+                }
+
+                // Allocate the blur buffer.
+                rt2 = GetTempBuffer(blur2Width, blur2Height);
+
+                // Shrink + thresholding + temporal filtering
+                if (_accBuffer && _temporalFiltering > 0.0f)
+                {
+                    _material.SetTexture("_AccTex", _accBuffer);
+                    Graphics.Blit(rt, rt2, _material, 2);
+                }
+                else
+                {
+                    Graphics.Blit(rt, rt2, _material, 1);
+                }
                 if (rt != source) ReleaseTempBuffer(rt);
-                rt = rt_next;
-            }
 
-            if (_accBuffer && _temporalFiltering > 0.0f)
-            {
-                // Temporal filtering + thresholding + downsampling
-                _material.SetTexture("_AccTex", _accBuffer);
-                Graphics.Blit(rt, rt3, _material, 2);
-            }
-            else
-            {
-                // Thresholding + downsampling
-                Graphics.Blit(rt, rt3, _material, 1);
-            }
+                // Update the accmulation buffer.
+                if (_accBuffer)
+                {
+                    ReleaseTempBuffer(_accBuffer);
+                    _accBuffer = null;
+                }
+                if (_temporalFiltering > 0.0f)
+                {
+                    _accBuffer = GetTempBuffer(blur2Width, blur2Height);
+                    Graphics.Blit(rt2, _accBuffer);
+                }
 
-            if (rt != source) ReleaseTempBuffer(rt);
-
-            // Update the accmulation buffer.
-            if (_accBuffer)
-            {
-                ReleaseTempBuffer(_accBuffer);
-                _accBuffer = null;
-            }
-
-            if (_temporalFiltering > 0.0f)
-            {
-                _accBuffer = GetTempBuffer(blur2Width, blur2Height);
-                Graphics.Blit(rt3, _accBuffer);
-            }
-
-            // Small bloom: apply the separable Gaussian filter.
-            for (var i = 0; i < 2; i++)
-            {
-                Graphics.Blit(rt1, rt2, _material, 3); // horizontal
-                Graphics.Blit(rt2, rt1, _material, 4); // vertical
-            }
-
-            // Large bloom: apply the separable box filter repeatedly.
-            for (var i = 0; i < 4; i++)
-            {
-                Graphics.Blit(rt3, rt4, _material, 5); // horizontal
-                Graphics.Blit(rt4, rt3, _material, 6); // vertical
+                // Apply the separable box filter repeatedly.
+                var rtb = GetTempBuffer(blur2Width, blur2Height);
+                for (var i = 0; i < 4; i++)
+                {
+                    Graphics.Blit(rt2, rtb, _material, 5);
+                    Graphics.Blit(rtb, rt2, _material, 6);
+                }
+                ReleaseTempBuffer(rtb);
             }
 
             // Compositing
-            _material.SetTexture("_Blur1Tex", rt1);
-            _material.SetTexture("_Blur2Tex", rt3);
+            _material.SetTexture("_Blur1Tex", rt1 ? rt1 : source);
+            _material.SetTexture("_Blur2Tex", rt2 ? rt2 : source);
             Graphics.Blit(source, destination, _material, 7);
 
             // Release the blur buffers.
             ReleaseTempBuffer(rt1);
             ReleaseTempBuffer(rt2);
-            ReleaseTempBuffer(rt3);
-            ReleaseTempBuffer(rt4);
         }
 
         #endregion
