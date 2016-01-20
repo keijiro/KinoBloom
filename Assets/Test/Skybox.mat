@@ -7,8 +7,8 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: Skybox
-  m_Shader: {fileID: 103, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: 
+  m_Shader: {fileID: 4800000, guid: f2a20f3ce17b84e938179dc858a385eb, type: 3}
+  m_ShaderKeywords: _LOD_ON
   m_LightmapFlags: 5
   m_CustomRenderQueue: 1000
   stringTagMap: {}
@@ -40,26 +40,19 @@ Material:
         first:
           name: _Tex
         second:
-          m_Texture: {fileID: 8900000, guid: bdc00ce10dfac409598301376a3f7d59, type: 3}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _ParallaxMap
-        second:
-          m_Texture: {fileID: 0}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _OcclusionMap
-        second:
-          m_Texture: {fileID: 0}
+          m_Texture: {fileID: 8900000, guid: 5f4647de519dbf14d9d49aa1f2ca4552, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
         first:
           name: _EmissionMap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _ParallaxMap
         second:
           m_Texture: {fileID: 0}
           m_Scale: {x: 1, y: 1}
@@ -80,9 +73,23 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
+          name: _OcclusionMap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
           name: _MetallicGlossMap
         second:
           m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Cubemap
+        second:
+          m_Texture: {fileID: 8900000, guid: 5f4647de519dbf14d9d49aa1f2ca4552, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
     m_Floats:
@@ -98,10 +105,6 @@ Material:
         first:
           name: _Cutoff
         second: .5
-      data:
-        first:
-          name: _Exposure
-        second: 3
       data:
         first:
           name: _Parallax
@@ -136,7 +139,23 @@ Material:
         second: 0
       data:
         first:
+          name: _Exposure
+        second: 1
+      data:
+        first:
           name: _Metallic
+        second: 0
+      data:
+        first:
+          name: _Saturation
+        second: 1
+      data:
+        first:
+          name: _Lod
+        second: 1
+      data:
+        first:
+          name: _LodLevel
         second: 0
       data:
         first:
@@ -155,3 +174,19 @@ Material:
         first:
           name: _Tint
         second: {r: .5, g: .5, b: .5, a: .5}
+      data:
+        first:
+          name: _Euler
+        second: {r: 0, g: 0, b: 0, a: 1}
+      data:
+        first:
+          name: _Rotation1
+        second: {r: 1, g: 0, b: 0, a: 0}
+      data:
+        first:
+          name: _Rotation2
+        second: {r: 0, g: 1, b: 0, a: 0}
+      data:
+        first:
+          name: _Rotation3
+        second: {r: 0, g: 0, b: 1, a: 0}
