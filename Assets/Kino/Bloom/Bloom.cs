@@ -135,6 +135,12 @@ namespace Kino
             {
                 var rt = source;
 
+                {
+                    var rt_next = GetTempBuffer(rt.width, rt.height);
+                    Graphics.Blit(rt, rt_next, _material, 1);
+                    rt = rt_next;
+                }
+
                 // Shrink the source image with the quater downsampler
                 while (rt.height > blur1Height * 4)
                 {
@@ -148,7 +154,7 @@ namespace Kino
                 rt1 = GetTempBuffer(blur1Width, blur1Height);
 
                 // Shrink the source image and apply the threshold.
-                Graphics.Blit(rt, rt1, _material, 1);
+                Graphics.Blit(rt, rt1);//, _material, 1);
                 if (rt != source) ReleaseTempBuffer(rt);
 
                 // Apply the separable Gaussian filter.
@@ -165,6 +171,12 @@ namespace Kino
             if (_intensity2 > 0.0f)
             {
                 var rt = source;
+
+                {
+                    var rt_next = GetTempBuffer(rt.width, rt.height);
+                    Graphics.Blit(rt, rt_next, _material, 1);
+                    rt = rt_next;
+                }
 
                 // Shrink the source image with the quater downsampler
                 while (rt.height > blur2Height * 4)
@@ -186,7 +198,8 @@ namespace Kino
                 }
                 else
                 {
-                    Graphics.Blit(rt, rt2, _material, 1);
+                    //Graphics.Blit(rt, rt2, _material, 1);
+                    Graphics.Blit(rt, rt2);
                 }
                 if (rt != source) ReleaseTempBuffer(rt);
 

@@ -62,8 +62,20 @@ Shader "Hidden/Kino/Bloom"
     // Thresholding filter
     half4 frag_threshold(v2f_img i) : SV_Target
     {
+#if 1
+        float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
+        half4 s0 = tex2D(_MainTex, i.uv);
+        half4 s1 = tex2D(_MainTex, i.uv - d.xz);
+        half4 s2 = tex2D(_MainTex, i.uv + d.xz);
+        half4 s3 = tex2D(_MainTex, i.uv - d.zy);
+        half4 s4 = tex2D(_MainTex, i.uv + d.zy);
+
+        half4 cs = s0 + s1 + s2 - min(min(s0, s1), s2) - max(max(s0, s1), s2);
+        cs = cs + s3 + s4 - min(min(cs, s3), s4) - max(max(cs, s3), s4);
+#else
         half4 cs = tex2D(_MainTex, i.uv);
-        half lm = Luminance(cs.rgb);
+#endif
+        half lm = max(0, Luminance(cs.rgb));
         return cs * smoothstep(_Threshold, _Threshold * 1.5, lm);
     }
 
