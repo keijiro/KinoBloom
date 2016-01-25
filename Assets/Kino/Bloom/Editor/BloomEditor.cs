@@ -1,7 +1,7 @@
 //
-// KinoBloom - Bloom effect
+// Kino/Bloom v2 - Bloom filter for Unity
 //
-// Copyright (C) 2015 Keijiro Takahashi
+// Copyright (C) 2015, 2016 Keijiro Takahashi
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
