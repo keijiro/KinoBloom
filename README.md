@@ -4,6 +4,8 @@ Kino/Bloom v2
 *Bloom* is a high-quality image effect, which adds bloom/veiling glare effect
 onto rendered images.
 
+![screenshot](https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png)
+
 ![screenshot](https://36.media.tumblr.com/31261e8cf49c637ffcfdb4d86da41506/tumblr_o1i18y41DH1qio469o1_640.png)
 
 ![screenshot](https://36.media.tumblr.com/1f31745016c56f1976e9867eb5355b5e/tumblr_o1i18y41DH1qio469o2_640.png)
