@@ -166,12 +166,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6363bba448bf64e60a763433f9ddf81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _radius1: 1.5
-  _radius2: 5.5999999
-  _intensity1: .400000006
-  _intensity2: .300000012
-  _threshold: .600000024
-  _temporalFiltering: 0
+  _threshold: 1
+  _intensity: .5
+  _scale: 3
+  _antiFlicker: 0
   _shader: {fileID: 4800000, guid: 5a711a01011934ebcb58ef5ad52159d6, type: 3}
 --- !u!81 &841190279
 AudioListener:

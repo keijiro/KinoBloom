@@ -32,65 +32,50 @@ namespace Kino
     {
         #region Public Properties
 
-        // Bloom radius
-        [SerializeField, Range(1, 10)]
-        float _radius1 = 1.0f;
-
-        public float radius1 {
-            get { return _radius1; }
-            set { _radius1 = value; }
-        }
-
-        [SerializeField, Range(1, 10)]
-        float _radius2 = 4.0f;
-
-        public float radius2 {
-            get { return _radius2; }
-            set { _radius2 = value; }
-        }
-
-        // Bloom intensity
-        [SerializeField, Range(0, 1.0f)]
-        float _intensity1 = 0.2f;
-
-        public float intensity1 {
-            get { return _intensity1; }
-            set { _intensity1 = value; }
-        }
-
-        [SerializeField, Range(0, 1.0f)]
-        float _intensity2 = 0.2f;
-
-        public float intensity2 {
-            get { return _intensity2; }
-            set { _intensity2 = value; }
-        }
-
-        // Threshold
-        [SerializeField, Range(0, 2)]
-        float _threshold = 0.5f;
-
+        /// Prefilter threshold value
         public float threshold {
             get { return _threshold; }
             set { _threshold = value; }
         }
 
-        // Temporal filtering
-        [SerializeField, Range(0, 1.0f)]
-        float _temporalFiltering = 0.0f;
+        [SerializeField, Range(0, 2)]
+        float _threshold = 0.5f;
 
-        public float temporalFiltering {
-            get { return _temporalFiltering; }
-            set { _temporalFiltering = value; }
+        /// Bloom intensity
+        public float intensity {
+            get { return _intensity; }
+            set { _intensity = value; }
+        }
+
+        [SerializeField, Range(0, 2)]
+        float _intensity = 1;
+
+        /// Bloom scale
+        public float scale {
+            get { return _scale; }
+            set { _scale = value; }
+        }
+
+        [SerializeField, Range(0, 5)]
+        float _scale = 1;
+
+        /// Anti-flicker median filter
+        [SerializeField]
+        bool _antiFlicker = false;
+
+        public bool antiFlicker {
+            get { return _antiFlicker; }
+            set { _antiFlicker = value; }
         }
 
         #endregion
 
-        #region Private Properties
+        #region Private Variables
 
-        [SerializeField] Shader _shader;
+        [SerializeField, HideInInspector]
+        Shader _shader;
+
         Material _material;
-        RenderTexture _accBuffer;
 
         #endregion
 
@@ -98,7 +83,8 @@ namespace Kino
 
         RenderTexture GetTempBuffer(int width, int height)
         {
-            return RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.DefaultHDR);
+            return RenderTexture.GetTemporary(
+                width, height, 0, RenderTextureFormat.DefaultHDR);
         }
 
         void ReleaseTempBuffer(RenderTexture rt)
@@ -108,131 +94,71 @@ namespace Kino
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            // Set up the material object.
+            // create a materialf for the shader if not yet ready
             if (_material == null)
             {
                 _material = new Material(_shader);
                 _material.hideFlags = HideFlags.DontSave;
             }
 
-            // Common options
-            _material.SetFloat("_Intensity1", _intensity1);
-            _material.SetFloat("_Intensity2", _intensity2);
+            // determine the iteration count
+            var logh = Mathf.Log(source.height, 2) + _scale - 5;
+            var logh_i = (int)logh;
+            var iteration = Mathf.Max(2, logh_i);
+
+            // update the shader properties
+            _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
+            _material.SetFloat("_Intensity", _intensity);
             _material.SetFloat("_Threshold", _threshold);
-            _material.SetFloat("_TempFilter", 1.0f - Mathf.Exp(_temporalFiltering * -4));
 
-            // Calculate the size of the blur buffers.
-            var blur1Height = (int)(720 / _radius1);
-            var blur2Height = (int)(256 / _radius2);
-            var blur1Width = blur1Height * source.width / source.height;
-            var blur2Width = blur2Height * source.width / source.height;
+            if (_antiFlicker)
+                _material.EnableKeyword("PREFILTER_MEDIAN");
+            else
+                _material.DisableKeyword("PREFILTER_MEDIAN");
 
-            // Blur image buffers
-            RenderTexture rt1 = null, rt2 = null;
+            // allocate temporary buffers
+            var rt1 = new RenderTexture[iteration + 1];
+            var rt2 = new RenderTexture[iteration + 1];
 
-            // Small bloom
-            if (_intensity1 > 0.0f)
+            var tx = source.width;
+            var ty = source.height;
+
+            for (var i = 0; i < iteration + 1; i++)
             {
-                var rt = source;
-
-                {
-                    var rt_next = GetTempBuffer(rt.width, rt.height);
-                    Graphics.Blit(rt, rt_next, _material, 1);
-                    rt = rt_next;
-                }
-
-                // Shrink the source image with the quater downsampler
-                while (rt.height > blur1Height * 4)
-                {
-                    var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
-                    Graphics.Blit(rt, rt_next, _material, 0);
-                    if (rt != source) ReleaseTempBuffer(rt);
-                    rt = rt_next;
-                }
-
-                // Allocate the blur buffer.
-                rt1 = GetTempBuffer(blur1Width, blur1Height);
-
-                // Shrink the source image and apply the threshold.
-                Graphics.Blit(rt, rt1);//, _material, 1);
-                if (rt != source) ReleaseTempBuffer(rt);
-
-                // Apply the separable Gaussian filter.
-                var rtb = GetTempBuffer(blur1Width, blur1Height);
-                for (var i = 0; i < 2; i++)
-                {
-                    Graphics.Blit(rt1, rtb, _material, 3);
-                    Graphics.Blit(rtb, rt1, _material, 4);
-                }
-                ReleaseTempBuffer(rtb);
+                rt1[i] = GetTempBuffer(tx, ty);
+                if (i > 0 && i < iteration)
+                    rt2[i] = GetTempBuffer(tx, ty);
+                tx /= 2;
+                ty /= 2;
             }
 
-            // Large bloom
-            if (_intensity2 > 0.0f)
+            // apply the prefilter
+            Graphics.Blit(source, rt1[0], _material, 0);
+
+            // create a mip pyramid
+            for (var i = 0; i < iteration; i++)
+                Graphics.Blit(rt1[i], rt1[i + 1], _material, 1);
+
+            // blur and combine loop
+            _material.SetTexture("_BaseTex", rt1[iteration - 1]);
+            Graphics.Blit(rt1[iteration], rt2[iteration - 1], _material, 2);
+
+            for (var i = iteration - 1; i > 1; i--)
             {
-                var rt = source;
-
-                {
-                    var rt_next = GetTempBuffer(rt.width, rt.height);
-                    Graphics.Blit(rt, rt_next, _material, 1);
-                    rt = rt_next;
-                }
-
-                // Shrink the source image with the quater downsampler
-                while (rt.height > blur2Height * 4)
-                {
-                    var rt_next = GetTempBuffer(rt.width / 4, rt.height / 4);
-                    Graphics.Blit(rt, rt_next, _material, 0);
-                    if (rt != source) ReleaseTempBuffer(rt);
-                    rt = rt_next;
-                }
-
-                // Allocate the blur buffer.
-                rt2 = GetTempBuffer(blur2Width, blur2Height);
-
-                // Shrink + thresholding + temporal filtering
-                if (_accBuffer && _temporalFiltering > 0.0f)
-                {
-                    _material.SetTexture("_AccTex", _accBuffer);
-                    Graphics.Blit(rt, rt2, _material, 2);
-                }
-                else
-                {
-                    //Graphics.Blit(rt, rt2, _material, 1);
-                    Graphics.Blit(rt, rt2);
-                }
-                if (rt != source) ReleaseTempBuffer(rt);
-
-                // Update the accmulation buffer.
-                if (_accBuffer)
-                {
-                    ReleaseTempBuffer(_accBuffer);
-                    _accBuffer = null;
-                }
-                if (_temporalFiltering > 0.0f)
-                {
-                    _accBuffer = GetTempBuffer(blur2Width, blur2Height);
-                    Graphics.Blit(rt2, _accBuffer);
-                }
-
-                // Apply the separable box filter repeatedly.
-                var rtb = GetTempBuffer(blur2Width, blur2Height);
-                for (var i = 0; i < 4; i++)
-                {
-                    Graphics.Blit(rt2, rtb, _material, 5);
-                    Graphics.Blit(rtb, rt2, _material, 6);
-                }
-                ReleaseTempBuffer(rtb);
+                _material.SetTexture("_BaseTex", rt1[i - 1]);
+                Graphics.Blit(rt2[i],  rt2[i - 1], _material, 2);
             }
 
-            // Compositing
-            _material.SetTexture("_Blur1Tex", rt1 ? rt1 : source);
-            _material.SetTexture("_Blur2Tex", rt2 ? rt2 : source);
-            Graphics.Blit(source, destination, _material, 7);
+            // finish process
+            _material.SetTexture("_BaseTex", source);
+            Graphics.Blit(rt2[1], destination, _material, 3);
 
-            // Release the blur buffers.
-            ReleaseTempBuffer(rt1);
-            ReleaseTempBuffer(rt2);
+            // release the temporary buffers
+            for (var i = 0; i < iteration + 1; i++)
+            {
+                ReleaseTempBuffer(rt1[i]);
+                ReleaseTempBuffer(rt2[i]);
+            }
         }
 
         #endregion

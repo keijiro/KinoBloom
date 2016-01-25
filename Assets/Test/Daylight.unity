@@ -149,7 +149,6 @@ GameObject:
   - 81: {fileID: 841190279}
   - 45: {fileID: 841190284}
   - 114: {fileID: 841190278}
-  - 114: {fileID: 841190285}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -168,12 +167,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6363bba448bf64e60a763433f9ddf81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _radius1: 5
-  _radius2: 3
-  _intensity1: .5
-  _intensity2: 1
-  _threshold: .400000006
-  _temporalFiltering: 0
+  _threshold: .5
+  _intensity: 1
+  _scale: 1
+  _antiFlicker: 1
   _shader: {fileID: 4800000, guid: 5a711a01011934ebcb58ef5ad52159d6, type: 3}
 --- !u!81 &841190279
 AudioListener:
@@ -250,18 +247,6 @@ Skybox:
   m_GameObject: {fileID: 841190277}
   m_Enabled: 1
   m_CustomSkybox: {fileID: 2100000, guid: 8181d9e71ffa8df4c86d024e52e6e8e3, type: 2}
---- !u!114 &841190285
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 841190277}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 417990c135f5d3443a7371ebd2c703b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _shader: {fileID: 4800000, guid: fe4c47c9be2508041bc5469b7a488f36, type: 3}
 --- !u!1 &1244200054
 GameObject:
   m_ObjectHideFlags: 0
