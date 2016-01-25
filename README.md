@@ -1,7 +1,7 @@
 Kino/Bloom v2
 =============
 
-*Bloom* is a high-quality image effect, which adds bloom/veiling glare effect
+*Bloom* is a high-quality image effect that adds bloom/veiling glare effect
 onto rendered images.
 
 ![screenshot](https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png)
@@ -23,7 +23,7 @@ Unity 5.1 or later versions.
 Effect Properties
 -----------------
 
-- **Exposure** - Controls sensitibity of the filter with a value from 0.0 (less
+- **Exposure** - Controls sensitivity of the effect with a value from 0.0 (less
   sensitive, especially in darker area) to 1.0 (sensitive in full range).
 
 - **Radius** - Controls the extent of veiling effects. The value is not related
@@ -32,7 +32,7 @@ Effect Properties
 - **Intensity** - The blend ratio of the result image.
 
 - **Anti Flicker** - Sometimes the effect introduces strong flickers (flashing
-  noise). This option is used to surppress them with a small-kernel median
+  noise). This option is used to suppress them with a small-kernel median
   filter.
 
 No Backward Compatibility
