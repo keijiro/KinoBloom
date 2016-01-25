@@ -21,8 +21,6 @@ Unity 5.1 or later versions.
 Effect Properties
 -----------------
 
-01234567890123456789012345678901234567890123456789012345678901234567890123456789
-
 - **Exposure** - Controls sensitibity of the filter with a value from 0.0 (less
   sensitive, especially in darker area) to 1.0 (sensitive in full range).
 
