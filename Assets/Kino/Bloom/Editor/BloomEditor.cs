@@ -30,61 +30,27 @@ namespace Kino
     [CustomEditor(typeof(Bloom))]
     public class Bloomditor : Editor
     {
-        SerializedProperty _radius1;
-        SerializedProperty _radius2;
-        SerializedProperty _intensity1;
-        SerializedProperty _intensity2;
-        SerializedProperty _threshold;
-        SerializedProperty _temporalFiltering;
-
-        static string _configWarning =
-            "This effect only works properly with HDR and linear rendering. " +
-            "It's strongly recommended to enable these options.";
-
-        static GUIContent _textRadius = new GUIContent("Radius");
-        static GUIContent _textIntensity = new GUIContent("Intensity");
-
-        bool CheckConfig()
-        {
-            // Check if HDR rendering is enabled.
-            var cam = ((Bloom)target).GetComponent<Camera>();
-            if (!cam.hdr) return false;
-
-            // check if linear rendering is enabled.
-            return QualitySettings.activeColorSpace == ColorSpace.Linear;
-        }
+        SerializedProperty _exposure;
+        SerializedProperty _radius;
+        SerializedProperty _intensity;
+        SerializedProperty _antiFlicker;
 
         void OnEnable()
         {
-            _radius1 = serializedObject.FindProperty("_radius1");
-            _radius2 = serializedObject.FindProperty("_radius2");
-            _intensity1 = serializedObject.FindProperty("_intensity1");
-            _intensity2 = serializedObject.FindProperty("_intensity2");
-            _threshold = serializedObject.FindProperty("_threshold");
-            _temporalFiltering = serializedObject.FindProperty("_temporalFiltering");
+            _exposure = serializedObject.FindProperty("_exposure");
+            _radius = serializedObject.FindProperty("_radius");
+            _intensity = serializedObject.FindProperty("_intensity");
+            _antiFlicker = serializedObject.FindProperty("_antiFlicker");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            if (!CheckConfig())
-                EditorGUILayout.HelpBox(_configWarning, MessageType.Warning);
-
-            EditorGUILayout.LabelField("Fringe (small bloom)", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(_radius1, _textRadius);
-            EditorGUILayout.PropertyField(_intensity1, _textIntensity);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Diffusion (large bloom)", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(_radius2, _textRadius);
-            EditorGUILayout.PropertyField(_intensity2, _textIntensity);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(_threshold);
-            EditorGUILayout.PropertyField(_temporalFiltering);
+            EditorGUILayout.PropertyField(_exposure);
+            EditorGUILayout.PropertyField(_radius);
+            EditorGUILayout.PropertyField(_intensity);
+            EditorGUILayout.PropertyField(_antiFlicker);
 
             serializedObject.ApplyModifiedProperties();
         }

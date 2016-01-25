@@ -25,122 +25,93 @@ Shader "Hidden/Kino/Bloom"
 {
     Properties
     {
-        _MainTex("-", 2D) = "" {}
-        _AccTex("-", 2D) = "" {}
-        _Blur1Tex("-", 2D) = "" {}
-        _Blur2Tex("-", 2D) = "" {}
+        _MainTex("", 2D) = "" {}
+        _BaseTex("", 2D) = "" {}
     }
 
     CGINCLUDE
 
     #include "UnityCG.cginc"
 
+    #pragma multi_compile _ PREFILTER_MEDIAN
+
     sampler2D _MainTex;
+    sampler2D _BaseTex;
+
     float2 _MainTex_TexelSize;
+    float2 _BaseTex_TexelSize;
 
-    sampler2D _AccTex;
-    sampler2D _Blur1Tex;
-    sampler2D _Blur2Tex;
+    float _SampleScale;
+    half _Prefilter;
+    half _Intensity;
 
-    float _Threshold;
-    float _TempFilter;
-    float _Intensity1;
-    float _Intensity2;
-
-    // Quarter downsampler
-    half4 frag_downsample(v2f_img i) : SV_Target
+    half3 median(half3 a, half3 b, half3 c)
     {
-        float4 d = _MainTex_TexelSize.xyxy * float4(1, 1, -1, -1);
-        half4 s;
-        s  = tex2D(_MainTex, i.uv + d.xy);
-        s += tex2D(_MainTex, i.uv + d.xw);
-        s += tex2D(_MainTex, i.uv + d.zy);
-        s += tex2D(_MainTex, i.uv + d.zw);
-        return s * 0.25;
+        return a + b + c - min(min(a, b), c) - max(max(a, b), c);
     }
 
-    // Thresholding filter
-    half4 frag_threshold(v2f_img i) : SV_Target
+    half4 frag_prefilter(v2f_img i) : SV_Target
     {
-        half4 cs = tex2D(_MainTex, i.uv);
-        half lm = Luminance(cs.rgb);
-        return cs * smoothstep(_Threshold, _Threshold * 1.5, lm);
+#if PREFILTER_MEDIAN
+        float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
+
+        half4 s0 = tex2D(_MainTex, i.uv);
+        half3 s1 = tex2D(_MainTex, i.uv - d.xz).rgb;
+        half3 s2 = tex2D(_MainTex, i.uv + d.xz).rgb;
+        half3 s3 = tex2D(_MainTex, i.uv - d.zy).rgb;
+        half3 s4 = tex2D(_MainTex, i.uv + d.zy).rgb;
+
+        half3 m = median(median(s0.rgb, s1, s2), s3, s4);
+#else
+        half4 s0 = tex2D(_MainTex, i.uv);
+        half3 m = s0.rgb;
+#endif
+
+        m *= smoothstep(0, _Prefilter, Luminance(m));
+
+        return half4(m, s0.a);
     }
 
-    // Thresholding filter with temporal filtering
-    half4 frag_threshold_temp(v2f_img i) : SV_Target
+    half4 frag_box_reduce(v2f_img i) : SV_Target
     {
-        half4 co = frag_threshold(i);
-        half4 cp = tex2D(_AccTex, i.uv);
-        return lerp(co, cp, _TempFilter);
+        float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1);
+
+        float3 s;
+        s  = tex2D(_MainTex, i.uv + d.xy).rgb;
+        s += tex2D(_MainTex, i.uv + d.zy).rgb;
+        s += tex2D(_MainTex, i.uv + d.xw).rgb;
+        s += tex2D(_MainTex, i.uv + d.zw).rgb;
+
+        return half4(s * 0.25, 0);
     }
 
-    // 9-tap Gaussian filter with linear sampling
-    // http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
-    half4 gaussian_filter(float2 uv, float2 stride)
+    half4 frag_tent_expand(v2f_img i) : SV_Target
     {
-        half4 s = tex2D(_MainTex, uv) * 0.227027027;
+        float4 d = _MainTex_TexelSize.xyxy * float4(1, 1, -1, 0) * _SampleScale;
 
-        float2 d1 = stride * 1.3846153846;
-        s += tex2D(_MainTex, uv + d1) * 0.3162162162;
-        s += tex2D(_MainTex, uv - d1) * 0.3162162162;
+        float4 base = tex2D(_BaseTex, i.uv);
 
-        float2 d2 = stride * 3.2307692308;
-        s += tex2D(_MainTex, uv + d2) * 0.0702702703;
-        s += tex2D(_MainTex, uv - d2) * 0.0702702703;
+        float3 s;
+        s  = tex2D(_MainTex, i.uv - d.xy).rgb;
+        s += tex2D(_MainTex, i.uv - d.wy).rgb * 2;
+        s += tex2D(_MainTex, i.uv - d.zy).rgb;
 
-        return s;
+        s += tex2D(_MainTex, i.uv + d.zw).rgb * 2;
+        s += tex2D(_MainTex, i.uv       ).rgb * 4;
+        s += tex2D(_MainTex, i.uv + d.xw).rgb * 2;
+
+        s += tex2D(_MainTex, i.uv + d.zy).rgb;
+        s += tex2D(_MainTex, i.uv + d.wy).rgb * 2;
+        s += tex2D(_MainTex, i.uv + d.xy).rgb;
+
+        return half4(base.rgb + s * (1.0 / 16), base.a);
     }
 
-    half4 frag_gaussian_blur_h(v2f_img i) : SV_Target
+    half4 frag_combine(v2f_img i) : SV_Target
     {
-        return gaussian_filter(i.uv, float2(_MainTex_TexelSize.x, 0));
-    }
-
-    half4 frag_gaussian_blur_v(v2f_img i) : SV_Target
-    {
-        return gaussian_filter(i.uv, float2(0, _MainTex_TexelSize.y));
-    }
-
-    // 13-tap box filter with linear sampling
-    half4 box_filter(float2 uv, float2 stride)
-    {
-        half4 s = tex2D(_MainTex, uv) / 2;
-
-        float2 d1 = stride * 1.5;
-        s += tex2D(_MainTex, uv + d1);
-        s += tex2D(_MainTex, uv - d1);
-
-        float2 d2 = stride * 3.5;
-        s += tex2D(_MainTex, uv + d2);
-        s += tex2D(_MainTex, uv - d2);
-
-        float2 d3 = stride * 5.5;
-        s += tex2D(_MainTex, uv + d3);
-        s += tex2D(_MainTex, uv - d3);
-
-        return s * 2 / 13;
-    }
-
-    half4 frag_box_blur_h(v2f_img i) : SV_Target
-    {
-        return box_filter(i.uv, float2(_MainTex_TexelSize.x, 0));
-    }
-
-    half4 frag_box_blur_v(v2f_img i) : SV_Target
-    {
-        return box_filter(i.uv, float2(0, _MainTex_TexelSize.y));
-    }
-
-    // Composite function
-    half4 frag_composite(v2f_img i) : SV_Target
-    {
-        half4 cs = tex2D(_MainTex, i.uv);
-        half3 c1 = LinearToGammaSpace(cs.rgb);
-        half3 c2 = LinearToGammaSpace(tex2D(_Blur1Tex, i.uv).rgb);
-        half3 c3 = LinearToGammaSpace(tex2D(_Blur2Tex, i.uv).rgb);
-        half3 co = c1 + c2 * _Intensity1 + c3 * _Intensity2;
-        return half4(GammaToLinearSpace(co), cs.a);
+        half4 base = tex2D(_BaseTex, i.uv);
+        half3 blur = tex2D(_MainTex, i.uv).rgb;
+        return half4(base.rgb + blur * _Intensity, base.a);
     }
 
     ENDCG
@@ -151,7 +122,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_downsample
+            #pragma fragment frag_prefilter
             #pragma target 3.0
             ENDCG
         }
@@ -160,7 +131,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_threshold
+            #pragma fragment frag_box_reduce
             #pragma target 3.0
             ENDCG
         }
@@ -169,7 +140,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_threshold_temp
+            #pragma fragment frag_tent_expand
             #pragma target 3.0
             ENDCG
         }
@@ -178,43 +149,7 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_gaussian_blur_h
-            #pragma target 3.0
-            ENDCG
-        }
-        Pass
-        {
-            ZTest Always Cull Off ZWrite Off
-            CGPROGRAM
-            #pragma vertex vert_img
-            #pragma fragment frag_gaussian_blur_v
-            #pragma target 3.0
-            ENDCG
-        }
-        Pass
-        {
-            ZTest Always Cull Off ZWrite Off
-            CGPROGRAM
-            #pragma vertex vert_img
-            #pragma fragment frag_box_blur_h
-            #pragma target 3.0
-            ENDCG
-        }
-        Pass
-        {
-            ZTest Always Cull Off ZWrite Off
-            CGPROGRAM
-            #pragma vertex vert_img
-            #pragma fragment frag_box_blur_v
-            #pragma target 3.0
-            ENDCG
-        }
-        Pass
-        {
-            ZTest Always Cull Off ZWrite Off
-            CGPROGRAM
-            #pragma vertex vert_img
-            #pragma fragment frag_composite
+            #pragma fragment frag_combine
             #pragma target 3.0
             ENDCG
         }

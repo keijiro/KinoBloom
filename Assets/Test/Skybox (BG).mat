@@ -140,7 +140,7 @@ Material:
       data:
         first:
           name: _Exposure
-        second: .850000024
+        second: .800000012
       data:
         first:
           name: _Metallic
@@ -156,7 +156,7 @@ Material:
       data:
         first:
           name: _LodLevel
-        second: 2
+        second: 1
       data:
         first:
           name: _Rotation
