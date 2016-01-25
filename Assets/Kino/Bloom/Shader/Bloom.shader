@@ -42,8 +42,8 @@ Shader "Hidden/Kino/Bloom"
     float2 _BaseTex_TexelSize;
 
     float _SampleScale;
+    half _Prefilter;
     half _Intensity;
-    half _Threshold;
 
     half3 median(half3 a, half3 b, half3 c)
     {
@@ -67,8 +67,7 @@ Shader "Hidden/Kino/Bloom"
         half3 m = s0.rgb;
 #endif
 
-        half lm = Luminance(m);
-        m *= smoothstep(_Threshold, _Threshold * 2, lm);
+        m *= smoothstep(0, _Prefilter, Luminance(m));
 
         return half4(m, s0.a);
     }

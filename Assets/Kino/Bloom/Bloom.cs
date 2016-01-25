@@ -32,14 +32,23 @@ namespace Kino
     {
         #region Public Properties
 
-        /// Prefilter threshold value
-        public float threshold {
-            get { return _threshold; }
-            set { _threshold = value; }
+        /// Prefilter exposure value
+        public float exposure {
+            get { return _exposure; }
+            set { _exposure = value; }
         }
 
-        [SerializeField, Range(0, 2)]
-        float _threshold = 0.5f;
+        [SerializeField, Range(0, 1)]
+        float _exposure = 0.3f;
+
+        /// Bloom radius
+        public float radius {
+            get { return _radius; }
+            set { _radius = value; }
+        }
+
+        [SerializeField, Range(0, 5)]
+        float _radius = 2;
 
         /// Bloom intensity
         public float intensity {
@@ -48,16 +57,7 @@ namespace Kino
         }
 
         [SerializeField, Range(0, 2)]
-        float _intensity = 1;
-
-        /// Bloom scale
-        public float scale {
-            get { return _scale; }
-            set { _scale = value; }
-        }
-
-        [SerializeField, Range(0, 5)]
-        float _scale = 1;
+        float _intensity = 0.5f;
 
         /// Anti-flicker median filter
         [SerializeField]
@@ -102,14 +102,16 @@ namespace Kino
             }
 
             // determine the iteration count
-            var logh = Mathf.Log(source.height, 2) + _scale - 5;
+            var logh = Mathf.Log(source.height, 2) + _radius - 5;
             var logh_i = (int)logh;
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", _intensity);
-            _material.SetFloat("_Threshold", _threshold);
+
+            var pf = -Mathf.Log(_exposure * 0.998f + 0.001f);
+            _material.SetFloat("_Prefilter", pf);
 
             if (_antiFlicker)
                 _material.EnableKeyword("PREFILTER_MEDIAN");
