@@ -34,6 +34,7 @@ Shader "Hidden/Kino/Bloom"
     #include "UnityCG.cginc"
 
     #pragma multi_compile _ PREFILTER_MEDIAN
+    #pragma multi_compile _ GAMMA_SPACE
 
     sampler2D _MainTex;
     sampler2D _BaseTex;
@@ -44,6 +45,15 @@ Shader "Hidden/Kino/Bloom"
     float _SampleScale;
     half _Prefilter;
     half _Intensity;
+
+    half luma(half3 c)
+    {
+#if !GAMMA_SPACE
+        c = LinearToGammaSpace(c);
+#endif
+        // Rec.709 HDTV Standard
+        return dot(c, half3(0.2126, 0.7152, 0.0722));
+    }
 
     half3 median(half3 a, half3 b, half3 c)
     {
@@ -72,8 +82,11 @@ Shader "Hidden/Kino/Bloom"
         half4 s0 = limit_hdr(tex2D(_MainTex, i.uv));
         half3 m = s0.rgb;
 #endif
-
-        m *= smoothstep(0, _Prefilter, Luminance(m));
+        half lm = luma(m);
+#if GAMMA_SPACE
+        m = GammaToLinearSpace(m);
+#endif
+        m *= smoothstep(0, _Prefilter, lm);
 
         return half4(m, s0.a);
     }
@@ -117,7 +130,14 @@ Shader "Hidden/Kino/Bloom"
     {
         half4 base = tex2D(_BaseTex, i.uv);
         half3 blur = tex2D(_MainTex, i.uv).rgb;
-        return half4(base.rgb + blur * _Intensity, base.a);
+#if GAMMA_SPACE
+        base.rgb = GammaToLinearSpace(base.rgb);
+#endif
+        half3 cout = base.rgb + blur * _Intensity;
+#if GAMMA_SPACE
+        cout = LinearToGammaSpace(cout);
+#endif
+        return half4(cout, base.a);
     }
 
     ENDCG

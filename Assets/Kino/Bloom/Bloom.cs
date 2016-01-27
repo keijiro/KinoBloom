@@ -94,6 +94,8 @@ namespace Kino
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
+            var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
+
             // create a materialf for the shader if not yet ready
             if (_material == null)
             {
@@ -110,13 +112,18 @@ namespace Kino
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", _intensity);
 
-            var pf = -Mathf.Log(_exposure * 0.998f + 0.001f);
-            _material.SetFloat("_Prefilter", pf);
+            var pf = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
+            _material.SetFloat("_Prefilter", pf * 10);
 
             if (_antiFlicker)
                 _material.EnableKeyword("PREFILTER_MEDIAN");
             else
                 _material.DisableKeyword("PREFILTER_MEDIAN");
+
+            if (isGamma)
+                _material.EnableKeyword("GAMMA_SPACE");
+            else
+                _material.DisableKeyword("GAMMA_SPACE");
 
             // allocate temporary buffers
             var rt1 = new RenderTexture[iteration + 1];
