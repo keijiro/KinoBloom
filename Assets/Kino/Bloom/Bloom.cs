@@ -104,7 +104,7 @@ namespace Kino
             }
 
             // determine the iteration count
-            var logh = Mathf.Log(source.height, 2) + _radius - 5;
+            var logh = Mathf.Log(source.height, 2) + _radius - 6;
             var logh_i = (int)logh;
             var iteration = Mathf.Max(2, logh_i);
 
