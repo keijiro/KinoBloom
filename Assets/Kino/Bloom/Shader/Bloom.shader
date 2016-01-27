@@ -34,7 +34,7 @@ Shader "Hidden/Kino/Bloom"
     #include "UnityCG.cginc"
 
     #pragma multi_compile _ PREFILTER_MEDIAN
-    #pragma multi_compile _ GAMMA_SPACE
+    #pragma multi_compile _ LINEAR_COLOR GAMMA_COLOR
 
     sampler2D _MainTex;
     sampler2D _BaseTex;
@@ -48,7 +48,7 @@ Shader "Hidden/Kino/Bloom"
 
     half luma(half3 c)
     {
-#if !GAMMA_SPACE
+#if LINEAR_COLOR
         c = LinearToGammaSpace(c);
 #endif
         // Rec.709 HDTV Standard
@@ -83,7 +83,7 @@ Shader "Hidden/Kino/Bloom"
         half3 m = s0.rgb;
 #endif
         half lm = luma(m);
-#if GAMMA_SPACE
+#if GAMMA_COLOR
         m = GammaToLinearSpace(m);
 #endif
         m *= smoothstep(0, _Prefilter, lm);
@@ -130,11 +130,11 @@ Shader "Hidden/Kino/Bloom"
     {
         half4 base = tex2D(_BaseTex, i.uv);
         half3 blur = tex2D(_MainTex, i.uv).rgb;
-#if GAMMA_SPACE
+#if GAMMA_COLOR
         base.rgb = GammaToLinearSpace(base.rgb);
 #endif
         half3 cout = base.rgb + blur * _Intensity;
-#if GAMMA_SPACE
+#if GAMMA_COLOR
         cout = LinearToGammaSpace(cout);
 #endif
         return half4(cout, base.a);

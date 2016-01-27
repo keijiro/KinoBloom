@@ -33,6 +33,7 @@ namespace Kino
         SerializedProperty _exposure;
         SerializedProperty _radius;
         SerializedProperty _intensity;
+        SerializedProperty _quality;
         SerializedProperty _antiFlicker;
 
         void OnEnable()
@@ -40,6 +41,7 @@ namespace Kino
             _exposure = serializedObject.FindProperty("_exposure");
             _radius = serializedObject.FindProperty("_radius");
             _intensity = serializedObject.FindProperty("_intensity");
+            _quality = serializedObject.FindProperty("_quality");
             _antiFlicker = serializedObject.FindProperty("_antiFlicker");
         }
 
@@ -50,6 +52,7 @@ namespace Kino
             EditorGUILayout.PropertyField(_exposure);
             EditorGUILayout.PropertyField(_radius);
             EditorGUILayout.PropertyField(_intensity);
+            EditorGUILayout.PropertyField(_quality);
             EditorGUILayout.PropertyField(_antiFlicker);
 
             serializedObject.ApplyModifiedProperties();

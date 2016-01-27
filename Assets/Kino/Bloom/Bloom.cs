@@ -59,6 +59,19 @@ namespace Kino
         [SerializeField, Range(0, 2)]
         float _intensity = 0.5f;
 
+        /// Quality level option
+        public QualityLevel quality {
+            get { return _quality; }
+            set { _quality = value; }
+        }
+
+        [SerializeField]
+        QualityLevel _quality = QualityLevel.Normal;
+
+        public enum QualityLevel {
+            IgnoreColorSpace, LowResolution, Normal
+        }
+
         /// Anti-flicker median filter
         [SerializeField]
         bool _antiFlicker = false;
@@ -103,8 +116,18 @@ namespace Kino
                 _material.hideFlags = HideFlags.DontSave;
             }
 
+            // source texture size (half it when in the low quality mode)
+            var tw = source.width;
+            var th = source.height;
+
+            if (_quality != QualityLevel.Normal)
+            {
+                tw /= 2;
+                th /= 2;
+            }
+
             // determine the iteration count
-            var logh = Mathf.Log(source.height, 2) + _radius - 6;
+            var logh = Mathf.Log(th, 2) + _radius - 6;
             var logh_i = (int)logh;
             var iteration = Mathf.Max(2, logh_i);
 
@@ -120,25 +143,34 @@ namespace Kino
             else
                 _material.DisableKeyword("PREFILTER_MEDIAN");
 
-            if (isGamma)
-                _material.EnableKeyword("GAMMA_SPACE");
+            if (_quality == QualityLevel.IgnoreColorSpace)
+            {
+                _material.DisableKeyword("LINEAR_COLOR");
+                _material.DisableKeyword("GAMMA_COLOR");
+            }
+            else if (isGamma)
+            {
+                _material.DisableKeyword("LINEAR_COLOR");
+                _material.EnableKeyword("GAMMA_COLOR");
+            }
             else
-                _material.DisableKeyword("GAMMA_SPACE");
+            {
+                _material.EnableKeyword("LINEAR_COLOR");
+                _material.DisableKeyword("GAMMA_COLOR");
+            }
 
             // allocate temporary buffers
             var rt1 = new RenderTexture[iteration + 1];
             var rt2 = new RenderTexture[iteration + 1];
 
-            var tx = source.width;
-            var ty = source.height;
 
             for (var i = 0; i < iteration + 1; i++)
             {
-                rt1[i] = GetTempBuffer(tx, ty);
+                rt1[i] = GetTempBuffer(tw, th);
                 if (i > 0 && i < iteration)
-                    rt2[i] = GetTempBuffer(tx, ty);
-                tx /= 2;
-                ty /= 2;
+                    rt2[i] = GetTempBuffer(tw, th);
+                tw /= 2;
+                th /= 2;
             }
 
             // apply the prefilter
