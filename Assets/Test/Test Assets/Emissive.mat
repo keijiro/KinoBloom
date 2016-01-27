@@ -6,11 +6,11 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: Gradient
-  m_Shader: {fileID: 4800000, guid: b577cc7e2b66f4521979fd57ca0c8417, type: 3}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 5
-  m_CustomRenderQueue: 1000
+  m_Name: Emissive
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _EMISSION
+  m_LightmapFlags: 1
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   m_SavedProperties:
     serializedVersion: 2
@@ -102,7 +102,7 @@ Material:
       data:
         first:
           name: _Glossiness
-        second: .5
+        second: 0
       data:
         first:
           name: _BumpScale
@@ -125,30 +125,14 @@ Material:
         second: 0
       data:
         first:
-          name: _Exposure
-        second: 1
-      data:
-        first:
           name: _Metallic
         second: 0
     m_Colors:
       data:
         first:
           name: _EmissionColor
-        second: {r: 0, g: 0, b: 0, a: 1}
-      data:
-        first:
-          name: _Color
         second: {r: 1, g: 1, b: 1, a: 1}
       data:
         first:
-          name: _TopColor
-        second: {r: .349999994, g: .370000005, b: .419999987, a: 1}
-      data:
-        first:
-          name: _MiddleColor
-        second: {r: .150000006, g: .150000006, b: .150000006, a: 1}
-      data:
-        first:
-          name: _BottomColor
-        second: {r: .119999997, g: .129999995, b: .150000006, a: 1}
+          name: _Color
+        second: {r: 0, g: 0, b: 0, a: 1}
