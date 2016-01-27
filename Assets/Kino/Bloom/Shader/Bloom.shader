@@ -63,8 +63,8 @@ Shader "Hidden/Kino/Bloom"
     // On some GeForce card, we might get extraordinary high value.
     // This might be a bug in the graphics driver or Unity's deferred
     // lighting shader, but anyway we have to cut it off at the moment.
-    half3 limit_hdr(half3 c) { return min(c, 1e+6); }
-    half4 limit_hdr(half4 c) { return min(c, 1e+6); }
+    half3 limit_hdr(half3 c) { return min(c, 65000); }
+    half4 limit_hdr(half4 c) { return min(c, 65000); }
 
     half4 frag_prefilter(v2f_img i) : SV_Target
     {
