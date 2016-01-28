@@ -66,6 +66,7 @@ public class Benchmark : MonoBehaviour
             var bloom = camera.AddComponent<Bloom>();
             bloom.antiFlicker = AntiFlicker;
             bloom.quality = Quality;
+            bloom.intensity = 0;
         }
 
         _frameCount = -2;
