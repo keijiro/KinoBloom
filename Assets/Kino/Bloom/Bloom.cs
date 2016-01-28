@@ -83,7 +83,7 @@ namespace Kino
 
         #endregion
 
-        #region Private Variables
+        #region Private Variables And Properties
 
         [SerializeField, HideInInspector]
         Shader _shader;
@@ -94,16 +94,21 @@ namespace Kino
 
         #region MonoBehaviour Functions
 
+        void OnEnable()
+        {
+            var shader = _shader ? _shader : Shader.Find("Hidden/Kino/Bloom");
+            _material = new Material(shader);
+            _material.hideFlags = HideFlags.DontSave;
+        }
+
+        void OnDisable()
+        {
+            DestroyImmediate(_material);
+        }
+
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
-
-            // create a materialf for the shader if not yet ready
-            if (_material == null)
-            {
-                _material = new Material(_shader);
-                _material.hideFlags = HideFlags.DontSave;
-            }
 
             // source texture size (half it when in the low quality mode)
             var tw = source.width;
