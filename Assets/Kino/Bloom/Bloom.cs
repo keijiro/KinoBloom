@@ -94,17 +94,6 @@ namespace Kino
 
         #region MonoBehaviour Functions
 
-        RenderTexture GetTempBuffer(int width, int height)
-        {
-            return RenderTexture.GetTemporary(
-                width, height, 0, RenderTextureFormat.DefaultHDR);
-        }
-
-        void ReleaseTempBuffer(RenderTexture rt)
-        {
-            RenderTexture.ReleaseTemporary(rt);
-        }
-
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
@@ -163,12 +152,11 @@ namespace Kino
             var rt1 = new RenderTexture[iteration + 1];
             var rt2 = new RenderTexture[iteration + 1];
 
-
             for (var i = 0; i < iteration + 1; i++)
             {
-                rt1[i] = GetTempBuffer(tw, th);
+                rt1[i] = RenderTexture.GetTemporary(tw, th, 0, source.format);
                 if (i > 0 && i < iteration)
-                    rt2[i] = GetTempBuffer(tw, th);
+                    rt2[i] = RenderTexture.GetTemporary(tw, th, 0, source.format);
                 tw /= 2;
                 th /= 2;
             }
@@ -197,8 +185,8 @@ namespace Kino
             // release the temporary buffers
             for (var i = 0; i < iteration + 1; i++)
             {
-                ReleaseTempBuffer(rt1[i]);
-                ReleaseTempBuffer(rt2[i]);
+                RenderTexture.ReleaseTemporary(rt1[i]);
+                RenderTexture.ReleaseTemporary(rt2[i]);
             }
         }
 
