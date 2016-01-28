@@ -25,11 +25,11 @@ public class Benchmark : MonoBehaviour
 
     void Update()
     {
-        if (_frameCount < 100)
+        if (_frameCount < 200)
         {
             _frameCount++;
 
-            if (_frameCount == 2)
+            if (_frameCount == 0)
                 _timeStart = Time.time;
             else
                 _averageTime = (Time.time - _timeStart) * 1000 / _frameCount;
@@ -68,6 +68,6 @@ public class Benchmark : MonoBehaviour
             bloom.quality = Quality;
         }
 
-        _frameCount = 0;
+        _frameCount = -2;
     }
 }
