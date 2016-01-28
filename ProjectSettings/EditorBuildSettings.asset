@@ -6,6 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Test/Array.unity
+  - enabled: 1
     path: Assets/Test/Daylight.unity
   - enabled: 1
     path: Assets/Test/Dark.unity
