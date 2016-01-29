@@ -43,7 +43,8 @@ Shader "Hidden/Kino/Bloom"
     float2 _BaseTex_TexelSize;
 
     float _PrefilterOffs;
-    half _PrefilterCut;
+    half _Threshold;
+    half _Cutoff;
     float _SampleScale;
     half _Intensity;
 
@@ -88,7 +89,7 @@ Shader "Hidden/Kino/Bloom"
 #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
 #endif
-        m *= smoothstep(0, _PrefilterCut, lm);
+        m *= saturate((lm - _Threshold) / _Cutoff);
 
         return half4(m, s0.a);
     }

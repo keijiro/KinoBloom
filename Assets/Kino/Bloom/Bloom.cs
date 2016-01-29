@@ -32,6 +32,15 @@ namespace Kino
     {
         #region Public Properties
 
+        /// Prefilter threshold value
+        public float threshold {
+            get { return _threshold; }
+            set { _threshold = value; }
+        }
+
+        [SerializeField, Range(0, 1)]
+        float _threshold = 0.0f;
+
         /// Prefilter exposure value
         public float exposure {
             get { return _exposure; }
@@ -39,7 +48,7 @@ namespace Kino
         }
 
         [SerializeField, Range(0, 1)]
-        float _exposure = 0.3f;
+        float _exposure = 0.5f;
 
         /// Bloom radius
         public float radius {
@@ -57,7 +66,7 @@ namespace Kino
         }
 
         [SerializeField, Range(0, 2)]
-        float _intensity = 0.5f;
+        float _intensity = 1.0f;
 
         /// Quality level option
         public QualityLevel quality {
@@ -126,8 +135,10 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
+            _material.SetFloat("_Threshold", _threshold);
+
             var pfc = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
-            _material.SetFloat("_PrefilterCut", pfc * 10);
+            _material.SetFloat("_Cutoff", _threshold + pfc * 10);
 
             var pfo = _quality == QualityLevel.Low && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
