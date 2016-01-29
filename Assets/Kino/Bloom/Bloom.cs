@@ -69,7 +69,7 @@ namespace Kino
         QualityLevel _quality = QualityLevel.Normal;
 
         public enum QualityLevel {
-            IgnoreColorSpace, LowResolution, Normal
+            Low, Normal
         }
 
         /// Anti-flicker median filter
@@ -114,7 +114,7 @@ namespace Kino
             var tw = source.width;
             var th = source.height;
 
-            if (_quality != QualityLevel.Normal)
+            if (_quality == QualityLevel.Low)
             {
                 tw /= 2;
                 th /= 2;
@@ -126,23 +126,21 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
+            var pfc = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
+            _material.SetFloat("_PrefilterCut", pfc * 10);
+
+            var pfo = _quality == QualityLevel.Low && _antiFlicker;
+            _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
+
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", _intensity);
-
-            var pf = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
-            _material.SetFloat("_Prefilter", pf * 10);
 
             if (_antiFlicker)
                 _material.EnableKeyword("PREFILTER_MEDIAN");
             else
                 _material.DisableKeyword("PREFILTER_MEDIAN");
 
-            if (_quality == QualityLevel.IgnoreColorSpace)
-            {
-                _material.DisableKeyword("LINEAR_COLOR");
-                _material.DisableKeyword("GAMMA_COLOR");
-            }
-            else if (isGamma)
+            if (isGamma)
             {
                 _material.DisableKeyword("LINEAR_COLOR");
                 _material.EnableKeyword("GAMMA_COLOR");

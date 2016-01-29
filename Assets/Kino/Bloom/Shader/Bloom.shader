@@ -34,7 +34,7 @@ Shader "Hidden/Kino/Bloom"
     #include "UnityCG.cginc"
 
     #pragma multi_compile _ PREFILTER_MEDIAN
-    #pragma multi_compile _ LINEAR_COLOR GAMMA_COLOR
+    #pragma multi_compile LINEAR_COLOR GAMMA_COLOR
 
     sampler2D _MainTex;
     sampler2D _BaseTex;
@@ -42,8 +42,9 @@ Shader "Hidden/Kino/Bloom"
     float2 _MainTex_TexelSize;
     float2 _BaseTex_TexelSize;
 
+    float _PrefilterOffs;
+    half _PrefilterCut;
     float _SampleScale;
-    half _Prefilter;
     half _Intensity;
 
     half luma(half3 c)
@@ -68,25 +69,26 @@ Shader "Hidden/Kino/Bloom"
 
     half4 frag_prefilter(v2f_img i) : SV_Target
     {
+        float2 uv = i.uv + _MainTex_TexelSize.xy * _PrefilterOffs;
 #if PREFILTER_MEDIAN
         float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
 
-        half4 s0 = limit_hdr(tex2D(_MainTex, i.uv));
-        half3 s1 = limit_hdr(tex2D(_MainTex, i.uv - d.xz).rgb);
-        half3 s2 = limit_hdr(tex2D(_MainTex, i.uv + d.xz).rgb);
-        half3 s3 = limit_hdr(tex2D(_MainTex, i.uv - d.zy).rgb);
-        half3 s4 = limit_hdr(tex2D(_MainTex, i.uv + d.zy).rgb);
+        half4 s0 = limit_hdr(tex2D(_MainTex, uv));
+        half3 s1 = limit_hdr(tex2D(_MainTex, uv - d.xz).rgb);
+        half3 s2 = limit_hdr(tex2D(_MainTex, uv + d.xz).rgb);
+        half3 s3 = limit_hdr(tex2D(_MainTex, uv - d.zy).rgb);
+        half3 s4 = limit_hdr(tex2D(_MainTex, uv + d.zy).rgb);
 
         half3 m = median(median(s0.rgb, s1, s2), s3, s4);
 #else
-        half4 s0 = limit_hdr(tex2D(_MainTex, i.uv));
+        half4 s0 = limit_hdr(tex2D(_MainTex, uv));
         half3 m = s0.rgb;
 #endif
         half lm = luma(m);
 #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
 #endif
-        m *= smoothstep(0, _Prefilter, lm);
+        m *= smoothstep(0, _PrefilterCut, lm);
 
         return half4(m, s0.a);
     }
