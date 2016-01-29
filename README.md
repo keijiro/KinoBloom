@@ -4,16 +4,12 @@ Kino/Bloom v2
 *Bloom* is a high-quality image effect that adds bloom/veiling glare effect
 onto rendered images.
 
-![screenshot](https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png)
+![Screenshot][Image1]
 
-![screenshot](https://36.media.tumblr.com/31261e8cf49c637ffcfdb4d86da41506/tumblr_o1i18y41DH1qio469o1_640.png)
-
-![screenshot](https://36.media.tumblr.com/1f31745016c56f1976e9867eb5355b5e/tumblr_o1i18y41DH1qio469o2_640.png)
+![Screenshot][Image2]
 
 *Bloom* is part of the *Kino* effect suite. Please see the [GitHub
-repositories][kino] for further information about the suite.
-
-[kino]: https://github.com/search?q=kino+user%3Akeijiro&type=Repositories
+repositories][Kino] for further information about the suite.
 
 System Requirements
 -------------------
@@ -23,13 +19,17 @@ Unity 5.1 or later versions.
 Effect Properties
 -----------------
 
-- **Exposure** - Controls sensitivity of the effect with a value from 0.0 (less
-  sensitive, especially in darker area) to 1.0 (sensitive in full range).
+- **Threshold** - Filters out the pixels under this level. It's recommended to keep
+  this value as low as possible for natural results.
+
+- **Exposure** - Controls sensitivity of the effect. The value range is from 0.0
+  (less sensitive) to 1.0 (much sensitive).
 
 - **Radius** - Controls the extent of veiling effects. The value is not related
   to screen size and can be controlled in a resolution-independent fashion.
 
-- **Intensity** - The blend ratio of the result image.
+- **Intensity** - The blend ratio of the result image. It's recommended to keep
+  this value to 1.0 and change slightly if needed.
 
 - **Anti Flicker** - Sometimes the effect introduces strong flickers (flashing
   noise). This option is used to suppress them with a small-kernel median
@@ -63,3 +63,7 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[Kino]: https://github.com/search?q=kino+user%3Akeijiro&type=Repositories
+[Image1]: https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png
+[Image2]: https://36.media.tumblr.com/31261e8cf49c637ffcfdb4d86da41506/tumblr_o1i18y41DH1qio469o1_640.png
