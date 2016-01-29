@@ -116,9 +116,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6363bba448bf64e60a763433f9ddf81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _exposure: .300000012
+  _threshold: 0
+  _exposure: .800000012
   _radius: 2
-  _intensity: .5
+  _intensity: 1
+  _quality: 1
   _antiFlicker: 0
   _shader: {fileID: 4800000, guid: 5a711a01011934ebcb58ef5ad52159d6, type: 3}
 --- !u!81 &1069685169
