@@ -118,7 +118,7 @@ Shader "Hidden/Kino/Bloom"
     {
         float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1);
 
-        float3 s;
+        half3 s;
         s  = tex2D(_MainTex, i.uv + d.xy).rgb;
         s += tex2D(_MainTex, i.uv + d.zy).rgb;
         s += tex2D(_MainTex, i.uv + d.xw).rgb;
@@ -131,9 +131,9 @@ Shader "Hidden/Kino/Bloom"
     {
         float4 d = _MainTex_TexelSize.xyxy * float4(1, 1, -1, 0) * _SampleScale;
 
-        float4 base = tex2D(_BaseTex, i.uv_base);
+        half4 base = tex2D(_BaseTex, i.uv_base);
 
-        float3 s;
+        half3 s;
         s  = tex2D(_MainTex, i.uv_main - d.xy).rgb;
         s += tex2D(_MainTex, i.uv_main - d.wy).rgb * 2;
         s += tex2D(_MainTex, i.uv_main - d.zy).rgb;
