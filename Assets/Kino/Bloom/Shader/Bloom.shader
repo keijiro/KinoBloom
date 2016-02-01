@@ -68,6 +68,26 @@ Shader "Hidden/Kino/Bloom"
     half3 limit_hdr(half3 c) { return min(c, 65000); }
     half4 limit_hdr(half4 c) { return min(c, 65000); }
 
+    struct v2f_multitex
+    {
+        float4 pos : SV_POSITION;
+        float2 uv_main : TEXCOORD0;
+        float2 uv_base : TEXCOORD1;
+    };
+
+    v2f_multitex vert_multitex(appdata_full v)
+    {
+        v2f_multitex o;
+        o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+        o.uv_main = v.texcoord.xy;
+        o.uv_base = v.texcoord.xy;
+#if UNITY_UV_STARTS_AT_TOP
+        if (_BaseTex_TexelSize.y < 0.0)
+            o.uv_base.y = 1.0 - o.uv_base.y;
+#endif
+        return o;
+    }
+
     half4 frag_prefilter(v2f_img i) : SV_Target
     {
         float2 uv = i.uv + _MainTex_TexelSize.xy * _PrefilterOffs;
@@ -107,32 +127,32 @@ Shader "Hidden/Kino/Bloom"
         return half4(s * 0.25, 0);
     }
 
-    half4 frag_tent_expand(v2f_img i) : SV_Target
+    half4 frag_tent_expand(v2f_multitex i) : SV_Target
     {
         float4 d = _MainTex_TexelSize.xyxy * float4(1, 1, -1, 0) * _SampleScale;
 
-        float4 base = tex2D(_BaseTex, i.uv);
+        float4 base = tex2D(_BaseTex, i.uv_base);
 
         float3 s;
-        s  = tex2D(_MainTex, i.uv - d.xy).rgb;
-        s += tex2D(_MainTex, i.uv - d.wy).rgb * 2;
-        s += tex2D(_MainTex, i.uv - d.zy).rgb;
+        s  = tex2D(_MainTex, i.uv_main - d.xy).rgb;
+        s += tex2D(_MainTex, i.uv_main - d.wy).rgb * 2;
+        s += tex2D(_MainTex, i.uv_main - d.zy).rgb;
 
-        s += tex2D(_MainTex, i.uv + d.zw).rgb * 2;
-        s += tex2D(_MainTex, i.uv       ).rgb * 4;
-        s += tex2D(_MainTex, i.uv + d.xw).rgb * 2;
+        s += tex2D(_MainTex, i.uv_main + d.zw).rgb * 2;
+        s += tex2D(_MainTex, i.uv_main       ).rgb * 4;
+        s += tex2D(_MainTex, i.uv_main + d.xw).rgb * 2;
 
-        s += tex2D(_MainTex, i.uv + d.zy).rgb;
-        s += tex2D(_MainTex, i.uv + d.wy).rgb * 2;
-        s += tex2D(_MainTex, i.uv + d.xy).rgb;
+        s += tex2D(_MainTex, i.uv_main + d.zy).rgb;
+        s += tex2D(_MainTex, i.uv_main + d.wy).rgb * 2;
+        s += tex2D(_MainTex, i.uv_main + d.xy).rgb;
 
         return half4(base.rgb + s * (1.0 / 16), base.a);
     }
 
-    half4 frag_combine(v2f_img i) : SV_Target
+    half4 frag_combine(v2f_multitex i) : SV_Target
     {
-        half4 base = tex2D(_BaseTex, i.uv);
-        half3 blur = tex2D(_MainTex, i.uv).rgb;
+        half4 base = tex2D(_BaseTex, i.uv_base);
+        half3 blur = tex2D(_MainTex, i.uv_main).rgb;
 #if GAMMA_COLOR
         base.rgb = GammaToLinearSpace(base.rgb);
 #endif
@@ -168,7 +188,7 @@ Shader "Hidden/Kino/Bloom"
         {
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
-            #pragma vertex vert_img
+            #pragma vertex vert_multitex
             #pragma fragment frag_tent_expand
             #pragma target 3.0
             ENDCG
@@ -177,7 +197,7 @@ Shader "Hidden/Kino/Bloom"
         {
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
-            #pragma vertex vert_img
+            #pragma vertex vert_multitex
             #pragma fragment frag_combine
             #pragma target 3.0
             ENDCG
