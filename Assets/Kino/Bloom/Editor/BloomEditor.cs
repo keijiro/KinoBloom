@@ -28,7 +28,7 @@ namespace Kino
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Bloom))]
-    public class Bloomditor : Editor
+    public class BloomEditor : Editor
     {
         SerializedProperty _threshold;
         SerializedProperty _exposure;
