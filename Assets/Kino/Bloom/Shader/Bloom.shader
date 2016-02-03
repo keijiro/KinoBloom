@@ -33,8 +33,12 @@ Shader "Hidden/Kino/Bloom"
 
     #include "UnityCG.cginc"
 
+    #pragma multi_compile _ HIGH_QUALITY
     #pragma multi_compile _ PREFILTER_MEDIAN
     #pragma multi_compile LINEAR_COLOR GAMMA_COLOR
+
+    // Mobile: use RGBM instead of float/half RGB
+    #define USE_RGBM defined(SHADER_API_MOBILE)
 
     sampler2D _MainTex;
     sampler2D _BaseTex;
@@ -49,7 +53,7 @@ Shader "Hidden/Kino/Bloom"
     half _Intensity;
 
     // Luma function with Rec.709 HDTV Standard
-    half luma(half3 c)
+    half Luma(half3 c)
     {
     #if LINEAR_COLOR
         c = LinearToGammaSpace(c);
@@ -58,7 +62,7 @@ Shader "Hidden/Kino/Bloom"
     }
 
     // 3-tap median filter
-    half3 median(half3 a, half3 b, half3 c)
+    half3 Median(half3 a, half3 b, half3 c)
     {
         return a + b + c - min(min(a, b), c) - max(max(a, b), c);
     }
@@ -66,42 +70,77 @@ Shader "Hidden/Kino/Bloom"
     // On some GeForce card, we might get extraordinary high value.
     // This might be a bug in the graphics driver or Unity's deferred
     // lighting shader, but anyway we have to cut it off at the moment.
-    half3 limit_hdr(half3 c) { return min(c, 65000); }
-    half4 limit_hdr(half4 c) { return min(c, 65000); }
+    half3 SafeHDR(half3 c) { return min(c, 65000); }
+    half4 SafeHDR(half4 c) { return min(c, 65000); }
+
+    // RGBM encoding/decoding
+    half4 EncodeHDR(half3 rgb)
+    {
+    #if USE_RGBM && !HIGH_QUALITY
+        rgb *= 0.5;
+        float m = max(max(rgb.r, rgb.g), max(rgb.b, 1e-6));
+        m = ceil(m * 255) / 255;
+        return half4(rgb / m, m);
+    #else
+        return half4(rgb, 0);
+    #endif
+    }
+
+    half3 DecodeHDR(half4 rgba)
+    {
+    #if USE_RGBM && !HIGH_QUALITY
+        return rgba.rgb * rgba.a * 2;
+    #else
+        return rgba.rgb;
+    #endif
+    }
 
     // Downsampler with 4x4 box filter
-    half3 downsample_box4x4(float2 uv)
+    half3 DownsampleFilter(float2 uv)
     {
         float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1);
 
         half3 s;
-        s  = tex2D(_MainTex, uv + d.xy).rgb;
-        s += tex2D(_MainTex, uv + d.zy).rgb;
-        s += tex2D(_MainTex, uv + d.xw).rgb;
-        s += tex2D(_MainTex, uv + d.zw).rgb;
+        s  = DecodeHDR(tex2D(_MainTex, uv + d.xy));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zy));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.xw));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zw));
 
         return s * (1.0 / 4);
     }
 
-    // 9-tap bilinear upsampler
-    half3 upsample_9tap(float2 uv)
+    half3 UpsampleFilter(float2 uv)
     {
+    #if HIGH_QUALITY
+        // 9-tap bilinear upsampler (tent filter)
         float4 d = _MainTex_TexelSize.xyxy * float4(1, 1, -1, 0) * _SampleScale;
 
         half3 s;
-        s  = tex2D(_MainTex, uv - d.xy).rgb;
-        s += tex2D(_MainTex, uv - d.wy).rgb * 2;
-        s += tex2D(_MainTex, uv - d.zy).rgb;
+        s  = DecodeHDR(tex2D(_MainTex, uv - d.xy));
+        s += DecodeHDR(tex2D(_MainTex, uv - d.wy)) * 2;
+        s += DecodeHDR(tex2D(_MainTex, uv - d.zy));
 
-        s += tex2D(_MainTex, uv + d.zw).rgb * 2;
-        s += tex2D(_MainTex, uv       ).rgb * 4;
-        s += tex2D(_MainTex, uv + d.xw).rgb * 2;
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zw)) * 2;
+        s += DecodeHDR(tex2D(_MainTex, uv       )) * 4;
+        s += DecodeHDR(tex2D(_MainTex, uv + d.xw)) * 2;
 
-        s += tex2D(_MainTex, uv + d.zy).rgb;
-        s += tex2D(_MainTex, uv + d.wy).rgb * 2;
-        s += tex2D(_MainTex, uv + d.xy).rgb;
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zy));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.wy)) * 2;
+        s += DecodeHDR(tex2D(_MainTex, uv + d.xy));
 
         return s * (1.0 / 16);
+    #else
+        // 4-tap bilinear upsampler
+        float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1) * (_SampleScale * 0.5);
+
+        half3 s;
+        s  = DecodeHDR(tex2D(_MainTex, uv + d.xy));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zy));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.xw));
+        s += DecodeHDR(tex2D(_MainTex, uv + d.zw));
+
+        return s * (1.0 / 4);
+    #endif
     }
 
     //
@@ -111,19 +150,19 @@ Shader "Hidden/Kino/Bloom"
     struct v2f_multitex
     {
         float4 pos : SV_POSITION;
-        float2 uv_main : TEXCOORD0;
-        float2 uv_base : TEXCOORD1;
+        float2 uvMain : TEXCOORD0;
+        float2 uvBase : TEXCOORD1;
     };
 
     v2f_multitex vert_multitex(appdata_full v)
     {
         v2f_multitex o;
         o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-        o.uv_main = v.texcoord.xy;
-        o.uv_base = v.texcoord.xy;
+        o.uvMain = v.texcoord.xy;
+        o.uvBase = v.texcoord.xy;
     #if UNITY_UV_STARTS_AT_TOP
         if (_BaseTex_TexelSize.y < 0.0)
-            o.uv_base.y = 1.0 - o.uv_base.y;
+            o.uvBase.y = 1.0 - v.texcoord.y;
     #endif
         return o;
     }
@@ -137,43 +176,42 @@ Shader "Hidden/Kino/Bloom"
         float2 uv = i.uv + _MainTex_TexelSize.xy * _PrefilterOffs;
     #if PREFILTER_MEDIAN
         float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
-
-        half4 s0 = limit_hdr(tex2D(_MainTex, uv));
-        half3 s1 = limit_hdr(tex2D(_MainTex, uv - d.xz).rgb);
-        half3 s2 = limit_hdr(tex2D(_MainTex, uv + d.xz).rgb);
-        half3 s3 = limit_hdr(tex2D(_MainTex, uv - d.zy).rgb);
-        half3 s4 = limit_hdr(tex2D(_MainTex, uv + d.zy).rgb);
-
-        half3 m = median(median(s0.rgb, s1, s2), s3, s4);
+        half4 s0 = SafeHDR(tex2D(_MainTex, uv));
+        half3 s1 = SafeHDR(tex2D(_MainTex, uv - d.xz).rgb);
+        half3 s2 = SafeHDR(tex2D(_MainTex, uv + d.xz).rgb);
+        half3 s3 = SafeHDR(tex2D(_MainTex, uv - d.zy).rgb);
+        half3 s4 = SafeHDR(tex2D(_MainTex, uv + d.zy).rgb);
+        half3 m = Median(Median(s0.rgb, s1, s2), s3, s4);
     #else
-        half4 s0 = limit_hdr(tex2D(_MainTex, uv));
+        half4 s0 = SafeHDR(tex2D(_MainTex, uv));
         half3 m = s0.rgb;
     #endif
-        half lm = luma(m);
+
+        half lm = Luma(m);
     #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
     #endif
         m *= saturate((lm - _Threshold) / _Cutoff);
 
-        return half4(m, s0.a);
+        return EncodeHDR(m);
     }
 
     half4 frag_downsample(v2f_img i) : SV_Target
     {
-        return half4(downsample_box4x4(i.uv), 0);
+        return EncodeHDR(DownsampleFilter(i.uv));
     }
 
     half4 frag_upsample(v2f_multitex i) : SV_Target
     {
-        half4 base = tex2D(_BaseTex, i.uv_base);
-        half3 blur = upsample_9tap(i.uv_main);
-        return half4(base.rgb + blur, 0);
+        half3 base = DecodeHDR(tex2D(_BaseTex, i.uvBase));
+        half3 blur = UpsampleFilter(i.uvMain);
+        return EncodeHDR(base + blur);
     }
 
     half4 frag_upsample_final(v2f_multitex i) : SV_Target
     {
-        half4 base = tex2D(_BaseTex, i.uv_base);
-        half3 blur = upsample_9tap(i.uv_main);
+        half4 base = tex2D(_BaseTex, i.uvBase);
+        half3 blur = UpsampleFilter(i.uvMain);
     #if GAMMA_COLOR
         base.rgb = GammaToLinearSpace(base.rgb);
     #endif

@@ -117,17 +117,23 @@ namespace Kino
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
+            var useRGBM = Application.isMobilePlatform;
+            var highQuality = _quality == QualityLevel.Normal;
             var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
 
             // source texture size (half it when in the low quality mode)
             var tw = source.width;
             var th = source.height;
 
-            if (_quality == QualityLevel.Low)
+            if (!highQuality)
             {
                 tw /= 2;
                 th /= 2;
             }
+
+            // blur buffer format
+            var rtFormat = useRGBM ?
+                RenderTextureFormat.Default : RenderTextureFormat.DefaultHDR;
 
             // determine the iteration count
             var logh = Mathf.Log(th, 2) + _radius - 6;
@@ -145,6 +151,11 @@ namespace Kino
 
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", _intensity);
+
+            if (highQuality)
+                _material.EnableKeyword("HIGH_QUALITY");
+            else
+                _material.DisableKeyword("HIGH_QUALITY");
 
             if (_antiFlicker)
                 _material.EnableKeyword("PREFILTER_MEDIAN");
@@ -168,9 +179,9 @@ namespace Kino
 
             for (var i = 0; i < iteration + 1; i++)
             {
-                rt1[i] = RenderTexture.GetTemporary(tw, th, 0, source.format);
+                rt1[i] = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
                 if (i > 0 && i < iteration)
-                    rt2[i] = RenderTexture.GetTemporary(tw, th, 0, source.format);
+                    rt2[i] = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
                 tw /= 2;
                 th /= 2;
             }
