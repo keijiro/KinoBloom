@@ -32,53 +32,69 @@ namespace Kino
     {
         #region Public Properties
 
-        /// Prefilter threshold value
+        /// Prefilter threshold
+        /// Filters out pixels under this level of brightness.
         public float threshold {
             get { return _threshold; }
             set { _threshold = value; }
         }
 
         [SerializeField, Range(0, 1)]
+        [Tooltip("Filters out pixels under this level of brightness.")]
         float _threshold = 0.0f;
 
         /// Prefilter exposure value
+        /// Controls sensitivity of the effect.
+        /// 0=less sensitive, 1=fully sensitive
         public float exposure {
             get { return _exposure; }
             set { _exposure = value; }
         }
 
         [SerializeField, Range(0, 1)]
+        [Tooltip("Sensitivity of the effect.\n"+
+                 "0=less sensitive, 1=fully sensitive")]
         float _exposure = 0.5f;
 
         /// Bloom radius
+        /// Changes extent of veiling effects in a screen
+        /// resolution-independent fashion.
         public float radius {
             get { return _radius; }
             set { _radius = value; }
         }
 
         [SerializeField, Range(0, 5)]
+        [Tooltip("Changes extent of veiling effects\n" +
+                 "in a screen resolution-independent fashion.")]
         float _radius = 2;
 
         /// Bloom intensity
+        /// Blend factor of the result image.
         public float intensity {
             get { return _intensity; }
             set { _intensity = value; }
         }
 
         [SerializeField, Range(0, 2)]
+        [Tooltip("Blend factor of the result image.")]
         float _intensity = 1.0f;
 
         /// High quality mode
+        /// Controls filter quality and buffer resolution.
         public bool highQuality {
             get { return _highQuality; }
             set { _highQuality = value; }
         }
 
         [SerializeField]
+        [Tooltip("Controls filter quality and buffer resolution.")]
         bool _highQuality = true;
 
         /// Anti-flicker median filter
+        /// Reduces flashing noise with a median filter.
         [SerializeField]
+        [Tooltip("Reduces flashing noise with a median filter.")]
         bool _antiFlicker = false;
 
         public bool antiFlicker {
@@ -116,10 +132,11 @@ namespace Kino
             var useRGBM = Application.isMobilePlatform;
             var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
 
-            // source texture size (half it when in the low quality mode)
+            // source texture size
             var tw = source.width;
             var th = source.height;
 
+            // halve the texture size for the low quality mode
             if (!_highQuality)
             {
                 tw /= 2;

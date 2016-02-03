@@ -42,7 +42,6 @@ Shader "Hidden/Kino/Bloom"
 
     sampler2D _MainTex;
     sampler2D _BaseTex;
-
     float2 _MainTex_TexelSize;
     float2 _BaseTex_TexelSize;
 
@@ -67,9 +66,7 @@ Shader "Hidden/Kino/Bloom"
         return a + b + c - min(min(a, b), c) - max(max(a, b), c);
     }
 
-    // On some GeForce card, we might get extraordinary high value.
-    // This might be a bug in the graphics driver or Unity's deferred
-    // lighting shader, but anyway we have to cut it off at the moment.
+    // Clamp HDR value within a safe range
     half3 SafeHDR(half3 c) { return min(c, 65000); }
     half4 SafeHDR(half4 c) { return min(c, 65000); }
 
@@ -77,7 +74,7 @@ Shader "Hidden/Kino/Bloom"
     half4 EncodeHDR(half3 rgb)
     {
     #if USE_RGBM
-        rgb *= 0.5;
+        rgb *= 1.0 / 8;
         float m = max(max(rgb.r, rgb.g), max(rgb.b, 1e-6));
         m = ceil(m * 255) / 255;
         return half4(rgb / m, m);
@@ -89,13 +86,13 @@ Shader "Hidden/Kino/Bloom"
     half3 DecodeHDR(half4 rgba)
     {
     #if USE_RGBM
-        return rgba.rgb * rgba.a * 2;
+        return rgba.rgb * rgba.a * 8;
     #else
         return rgba.rgb;
     #endif
     }
 
-    // Downsampler with 4x4 box filter
+    // Downsample with a 4x4 box filter
     half3 DownsampleFilter(float2 uv)
     {
         float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1);
@@ -174,6 +171,7 @@ Shader "Hidden/Kino/Bloom"
     half4 frag_prefilter(v2f_img i) : SV_Target
     {
         float2 uv = i.uv + _MainTex_TexelSize.xy * _PrefilterOffs;
+
     #if PREFILTER_MEDIAN
         float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
         half4 s0 = SafeHDR(tex2D(_MainTex, uv));
