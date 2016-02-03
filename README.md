@@ -4,9 +4,7 @@ Kino/Bloom v2
 *Bloom* is a high-quality image effect that adds bloom/veiling glare effect
 onto rendered images.
 
-![Screenshot][Image1]
-
-![Screenshot][Image2]
+![Screenshot][Image]
 
 *Bloom* is part of the *Kino* effect suite. Please see the [GitHub
 repositories][Kino] for further information about the suite.
@@ -30,6 +28,10 @@ Effect Properties
 
 - **Intensity** - The blend ratio of the result image. It's recommended to keep
   this value to 1.0 and change slightly if needed.
+
+- **High Quality** - Controls the filter quality and the buffer resolution. On
+  mobile platforms, it might strongly affect the performance of the effect,
+  therefore it’s recommended to be unchecked when running on mobile devices.
 
 - **Anti Flicker** - Sometimes the effect introduces strong flickers (flashing
   noise). This option is used to suppress them with a small-kernel median
@@ -65,5 +67,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [Kino]: https://github.com/search?q=kino+user%3Akeijiro&type=Repositories
-[Image1]: https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png
-[Image2]: https://36.media.tumblr.com/31261e8cf49c637ffcfdb4d86da41506/tumblr_o1i18y41DH1qio469o1_640.png
+[Image]: https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png
