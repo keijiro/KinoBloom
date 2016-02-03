@@ -76,7 +76,7 @@ Shader "Hidden/Kino/Bloom"
     // RGBM encoding/decoding
     half4 EncodeHDR(half3 rgb)
     {
-    #if USE_RGBM && !HIGH_QUALITY
+    #if USE_RGBM
         rgb *= 0.5;
         float m = max(max(rgb.r, rgb.g), max(rgb.b, 1e-6));
         m = ceil(m * 255) / 255;
@@ -88,7 +88,7 @@ Shader "Hidden/Kino/Bloom"
 
     half3 DecodeHDR(half4 rgba)
     {
-    #if USE_RGBM && !HIGH_QUALITY
+    #if USE_RGBM
         return rgba.rgb * rgba.a * 2;
     #else
         return rgba.rgb;
