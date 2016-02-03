@@ -14,8 +14,8 @@ public class Benchmark : MonoBehaviour
         get { return _mode == 0; }
     }
 
-    Bloom.QualityLevel Quality {
-        get { return (Bloom.QualityLevel)Mathf.Min(2, 3 - _mode); }
+    bool HighQuality {
+        get { return _mode != 2; }
     }
 
     void Start()
@@ -48,7 +48,7 @@ public class Benchmark : MonoBehaviour
             new Rect(0, 0, Screen.width, Screen.height),
             "Click the screen to switch test mode.\n" +
             "Screen Resolution: " + Screen.currentResolution + "\n" +
-            "Quality: " + Quality + "\n" +
+            "Quality: " + HighQuality + "\n" +
             "Anti Flicker: " + AntiFlicker + "\n" +
             "Average Time: " + _averageTime + " ms\n" +
             "Frame Count: " + _frameCount);
@@ -65,7 +65,7 @@ public class Benchmark : MonoBehaviour
         {
             var bloom = camera.AddComponent<Bloom>();
             bloom.antiFlicker = AntiFlicker;
-            bloom.quality = Quality;
+            bloom.highQuality = HighQuality;
             bloom.intensity = 0;
         }
 

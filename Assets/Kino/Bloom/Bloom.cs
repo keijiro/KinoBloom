@@ -68,18 +68,14 @@ namespace Kino
         [SerializeField, Range(0, 2)]
         float _intensity = 1.0f;
 
-        /// Quality level option
-        public QualityLevel quality {
-            get { return _quality; }
-            set { _quality = value; }
+        /// High quality mode
+        public bool highQuality {
+            get { return _highQuality; }
+            set { _highQuality = value; }
         }
 
         [SerializeField]
-        QualityLevel _quality = QualityLevel.Normal;
-
-        public enum QualityLevel {
-            Low, Normal
-        }
+        bool _highQuality = true;
 
         /// Anti-flicker median filter
         [SerializeField]
@@ -118,14 +114,13 @@ namespace Kino
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             var useRGBM = Application.isMobilePlatform;
-            var highQuality = _quality == QualityLevel.Normal;
             var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
 
             // source texture size (half it when in the low quality mode)
             var tw = source.width;
             var th = source.height;
 
-            if (!highQuality)
+            if (!_highQuality)
             {
                 tw /= 2;
                 th /= 2;
@@ -146,13 +141,13 @@ namespace Kino
             var pfc = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
             _material.SetFloat("_Cutoff", _threshold + pfc * 10);
 
-            var pfo = _quality == QualityLevel.Low && _antiFlicker;
+            var pfo = !_highQuality && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
 
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", _intensity);
 
-            if (highQuality)
+            if (_highQuality)
                 _material.EnableKeyword("HIGH_QUALITY");
             else
                 _material.DisableKeyword("HIGH_QUALITY");
