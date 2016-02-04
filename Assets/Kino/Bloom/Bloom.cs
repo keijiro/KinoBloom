@@ -170,9 +170,9 @@ namespace Kino
                 _material.DisableKeyword("HIGH_QUALITY");
 
             if (_antiFlicker)
-                _material.EnableKeyword("PREFILTER_MEDIAN");
+                _material.EnableKeyword("ANTI_FLICKER");
             else
-                _material.DisableKeyword("PREFILTER_MEDIAN");
+                _material.DisableKeyword("ANTI_FLICKER");
 
             if (isGamma)
             {
@@ -202,22 +202,24 @@ namespace Kino
             Graphics.Blit(source, rt1[0], _material, 0);
 
             // create a mip pyramid
-            for (var i = 0; i < iteration; i++)
-                Graphics.Blit(rt1[i], rt1[i + 1], _material, 1);
+            Graphics.Blit(rt1[0], rt1[1], _material, 1);
+
+            for (var i = 1; i < iteration; i++)
+                Graphics.Blit(rt1[i], rt1[i + 1], _material, 2);
 
             // blur and combine loop
             _material.SetTexture("_BaseTex", rt1[iteration - 1]);
-            Graphics.Blit(rt1[iteration], rt2[iteration - 1], _material, 2);
+            Graphics.Blit(rt1[iteration], rt2[iteration - 1], _material, 3);
 
             for (var i = iteration - 1; i > 1; i--)
             {
                 _material.SetTexture("_BaseTex", rt1[i - 1]);
-                Graphics.Blit(rt2[i],  rt2[i - 1], _material, 2);
+                Graphics.Blit(rt2[i],  rt2[i - 1], _material, 3);
             }
 
             // finish process
             _material.SetTexture("_BaseTex", source);
-            Graphics.Blit(rt2[1], destination, _material, 3);
+            Graphics.Blit(rt2[1], destination, _material, 4);
 
             // release the temporary buffers
             for (var i = 0; i < iteration + 1; i++)

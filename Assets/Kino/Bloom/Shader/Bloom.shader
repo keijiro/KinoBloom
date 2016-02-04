@@ -34,7 +34,7 @@ Shader "Hidden/Kino/Bloom"
     #include "UnityCG.cginc"
 
     #pragma multi_compile _ HIGH_QUALITY
-    #pragma multi_compile _ PREFILTER_MEDIAN
+    #pragma multi_compile _ ANTI_FLICKER
     #pragma multi_compile LINEAR_COLOR GAMMA_COLOR
 
     // Mobile: use RGBM instead of float/half RGB
@@ -106,6 +106,30 @@ Shader "Hidden/Kino/Bloom"
         return s * (1.0 / 4);
     }
 
+    #if ANTI_FLICKER
+
+    // Downsample with a 4x4 box filter + anti-flicker filter
+    half3 DownsampleAntiFlickerFilter(float2 uv)
+    {
+        float4 d = _MainTex_TexelSize.xyxy * float4(-1, -1, +1, +1);
+
+        half3 s1 = DecodeHDR(tex2D(_MainTex, uv + d.xy));
+        half3 s2 = DecodeHDR(tex2D(_MainTex, uv + d.zy));
+        half3 s3 = DecodeHDR(tex2D(_MainTex, uv + d.xw));
+        half3 s4 = DecodeHDR(tex2D(_MainTex, uv + d.zw));
+
+        // Karis's luma weighted average
+        half s1w = 1 / (Luma(s1) + 1);
+        half s2w = 1 / (Luma(s2) + 1);
+        half s3w = 1 / (Luma(s3) + 1);
+        half s4w = 1 / (Luma(s4) + 1);
+        half one_div_wsum = 1.0 / (s1w + s2w + s3w + s4w);
+
+        return (s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w) * one_div_wsum;
+    }
+
+    #endif
+
     half3 UpsampleFilter(float2 uv)
     {
     #if HIGH_QUALITY
@@ -172,7 +196,7 @@ Shader "Hidden/Kino/Bloom"
     {
         float2 uv = i.uv + _MainTex_TexelSize.xy * _PrefilterOffs;
 
-    #if PREFILTER_MEDIAN
+    #if ANTI_FLICKER
         float3 d = _MainTex_TexelSize.xyx * float3(1, 1, 0);
         half4 s0 = SafeHDR(tex2D(_MainTex, uv));
         half3 s1 = SafeHDR(tex2D(_MainTex, uv - d.xz).rgb);
@@ -194,7 +218,16 @@ Shader "Hidden/Kino/Bloom"
         return EncodeHDR(m);
     }
 
-    half4 frag_downsample(v2f_img i) : SV_Target
+    half4 frag_downsample1(v2f_img i) : SV_Target
+    {
+    #if ANTI_FLICKER
+        return EncodeHDR(DownsampleAntiFlickerFilter(i.uv));
+    #else
+        return EncodeHDR(DownsampleFilter(i.uv));
+    #endif
+    }
+
+    half4 frag_downsample2(v2f_img i) : SV_Target
     {
         return EncodeHDR(DownsampleFilter(i.uv));
     }
@@ -237,7 +270,16 @@ Shader "Hidden/Kino/Bloom"
             ZTest Always Cull Off ZWrite Off
             CGPROGRAM
             #pragma vertex vert_img
-            #pragma fragment frag_downsample
+            #pragma fragment frag_downsample1
+            #pragma target 3.0
+            ENDCG
+        }
+        Pass
+        {
+            ZTest Always Cull Off ZWrite Off
+            CGPROGRAM
+            #pragma vertex vert_img
+            #pragma fragment frag_downsample2
             #pragma target 3.0
             ENDCG
         }
