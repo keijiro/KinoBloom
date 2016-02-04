@@ -34,8 +34,7 @@ Effect Properties
   therefore it’s recommended to be unchecked when running on mobile devices.
 
 - **Anti Flicker** - Sometimes the effect introduces strong flickers (flashing
-  noise). This option is used to suppress them with a small-kernel median
-  filter.
+  noise). This option is used to suppress them with a noise reduction filter.
 
 No Backward Compatibility
 -------------------------
