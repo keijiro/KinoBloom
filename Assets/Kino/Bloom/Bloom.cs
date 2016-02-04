@@ -91,10 +91,10 @@ namespace Kino
         [Tooltip("Controls filter quality and buffer resolution.")]
         bool _highQuality = true;
 
-        /// Anti-flicker median filter
-        /// Reduces flashing noise with a median filter.
+        /// Anti-flicker filter
+        /// Reduces flashing noise with an additional filter.
         [SerializeField]
-        [Tooltip("Reduces flashing noise with a median filter.")]
+        [Tooltip("Reduces flashing noise with an additional filter.")]
         bool _antiFlicker = false;
 
         public bool antiFlicker {
