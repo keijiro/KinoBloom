@@ -31,7 +31,6 @@ namespace Kino
     public class BloomEditor : Editor
     {
         SerializedProperty _threshold;
-        SerializedProperty _exposure;
         SerializedProperty _radius;
         SerializedProperty _intensity;
         SerializedProperty _highQuality;
@@ -40,7 +39,6 @@ namespace Kino
         void OnEnable()
         {
             _threshold = serializedObject.FindProperty("_threshold");
-            _exposure = serializedObject.FindProperty("_exposure");
             _radius = serializedObject.FindProperty("_radius");
             _intensity = serializedObject.FindProperty("_intensity");
             _highQuality = serializedObject.FindProperty("_highQuality");
@@ -52,7 +50,6 @@ namespace Kino
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(_threshold);
-            EditorGUILayout.PropertyField(_exposure);
             EditorGUILayout.PropertyField(_radius);
             EditorGUILayout.PropertyField(_intensity);
             EditorGUILayout.PropertyField(_highQuality);

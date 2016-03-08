@@ -209,11 +209,11 @@ Shader "Hidden/Kino/Bloom"
         half3 m = s0.rgb;
     #endif
 
-        half lm = Luma(m);
     #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
     #endif
-        m *= saturate((lm - _Threshold) / _Cutoff);
+        half lm = dot(m, 1.0 / 3) + 1e-5;
+        m *= max(0, lm - _Threshold) / lm;
 
         return EncodeHDR(m);
     }
