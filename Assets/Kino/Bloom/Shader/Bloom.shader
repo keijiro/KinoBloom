@@ -47,7 +47,6 @@ Shader "Hidden/Kino/Bloom"
 
     float _PrefilterOffs;
     half _Threshold;
-    half _Cutoff;
     float _SampleScale;
     half _Intensity;
 
