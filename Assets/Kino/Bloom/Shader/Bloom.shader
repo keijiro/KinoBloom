@@ -27,6 +27,7 @@ Shader "Hidden/Kino/Bloom"
     {
         _MainTex("", 2D) = "" {}
         _BaseTex("", 2D) = "" {}
+        [Gamma] _Threshold("", Float) = 0
     }
 
     CGINCLUDE
@@ -209,7 +210,7 @@ Shader "Hidden/Kino/Bloom"
         m = GammaToLinearSpace(m);
     #endif
         half lm = dot(m, 1.0 / 3) + 1e-5;
-        m *= max(0, lm - _Threshold) / lm;
+        m *= max(0, min(lm, (lm - _Threshold) * 2)) / lm;
 
         return EncodeHDR(m);
     }
