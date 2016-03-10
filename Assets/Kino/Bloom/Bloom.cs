@@ -41,7 +41,18 @@ namespace Kino
 
         [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
-        float _threshold = 0.0f;
+        float _threshold = 0.5f;
+
+        /// Soft-knee coefficient
+        /// Makes transition between under/over-threshold gradual.
+        public float softKnee {
+            get { return _softKnee; }
+            set { _softKnee = value; }
+        }
+
+        [SerializeField, Range(0, 1)]
+        [Tooltip("Makes transition between under/over-threshold gradual.")]
+        float _softKnee = 0.5f;
 
         /// Bloom radius
         /// Changes extent of veiling effects in a screen
@@ -141,6 +152,10 @@ namespace Kino
 
             // update the shader properties
             _material.SetFloat("_Threshold", Mathf.Max(_threshold, 0));
+
+            var knee = _threshold * _softKnee + 1e-5f;
+            var curve = new Vector3(0.25f / knee, _threshold - knee, knee);
+            _material.SetVector("_Curve", curve);
 
             var pfo = !_highQuality && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);

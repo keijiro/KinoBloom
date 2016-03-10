@@ -27,7 +27,6 @@ Shader "Hidden/Kino/Bloom"
     {
         _MainTex("", 2D) = "" {}
         _BaseTex("", 2D) = "" {}
-        [Gamma] _Threshold("", Float) = 0
     }
 
     CGINCLUDE
@@ -48,13 +47,14 @@ Shader "Hidden/Kino/Bloom"
 
     float _PrefilterOffs;
     half _Threshold;
+    half3 _Curve;
     float _SampleScale;
     half _Intensity;
 
-    // Luminance function; coefficients are borrowed from Rec. 709 standard.
-    half Luminance709(half3 c)
+    // Brightness function
+    half Brightness(half3 c)
     {
-        return dot(c, half3(0.2126, 0.7152, 0.0722));
+       return max(max(c.r, c.g), c.b);
     }
 
     // 3-tap median filter
@@ -115,12 +115,12 @@ Shader "Hidden/Kino/Bloom"
         half3 s3 = DecodeHDR(tex2D(_MainTex, uv + d.xw));
         half3 s4 = DecodeHDR(tex2D(_MainTex, uv + d.zw));
 
-        // Karis's luma weighted average
-        half s1w = 1 / (Luminance709(s1) + 1);
-        half s2w = 1 / (Luminance709(s2) + 1);
-        half s3w = 1 / (Luminance709(s3) + 1);
-        half s4w = 1 / (Luminance709(s4) + 1);
-        half one_div_wsum = 1.0 / (s1w + s2w + s3w + s4w);
+        // Karis's luma weighted average (using brightness instead of luma)
+        half s1w = 1 / (Brightness(s1) + 1);
+        half s2w = 1 / (Brightness(s2) + 1);
+        half s3w = 1 / (Brightness(s3) + 1);
+        half s4w = 1 / (Brightness(s4) + 1);
+        half one_div_wsum = 1 / (s1w + s2w + s3w + s4w);
 
         return (s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w) * one_div_wsum;
     }
@@ -209,8 +209,18 @@ Shader "Hidden/Kino/Bloom"
     #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
     #endif
-        half lm = dot(m, 1.0 / 3) + 1e-5;
-        m *= max(0, min(lm, (lm - _Threshold) * 2)) / lm;
+        // Pixel brightness
+        half br = Brightness(m) + 1e-5;
+
+        // Over-threshold part: linear response
+        half rl = max(br - _Threshold, 0);
+
+        // Under-threshold part: quadratic curve
+        half rq = br - _Curve.y;
+        rq = _Curve.x * rq * rq;
+
+        // Combine and apply the brightness response curve.
+        m *= lerp(rl, rq, abs(br - _Threshold) < _Curve.z) / br;
 
         return EncodeHDR(m);
     }
