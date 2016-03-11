@@ -151,17 +151,17 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
-            _material.SetFloat("_Threshold", Mathf.Max(_threshold, 0));
+            _material.SetFloat("_Threshold", threshold);
 
-            var knee = _threshold * _softKnee + 1e-5f;
-            var curve = new Vector3(0.25f / knee, _threshold - knee, knee);
+            var knee = threshold * _softKnee + 1e-5f;
+            var curve = new Vector3(0.25f / knee, threshold - knee, knee);
             _material.SetVector("_Curve", curve);
 
             var pfo = !_highQuality && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
 
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
-            _material.SetFloat("_Intensity", Mathf.Max(_intensity, 0));
+            _material.SetFloat("_Intensity", intensity);
 
             if (_highQuality)
                 _material.EnableKeyword("HIGH_QUALITY");
