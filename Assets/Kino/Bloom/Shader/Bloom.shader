@@ -51,13 +51,10 @@ Shader "Hidden/Kino/Bloom"
     float _SampleScale;
     half _Intensity;
 
-    // Luma function with Rec.709 HDTV Standard
-    half Luma(half3 c)
+    // Brightness function
+    half Brightness(half3 c)
     {
-    #if LINEAR_COLOR
-        c = LinearToGammaSpace(c);
-    #endif
-        return dot(c, half3(0.2126, 0.7152, 0.0722));
+        return max(max(c.r, c.g), c.b);
     }
 
     // 3-tap median filter
@@ -118,11 +115,11 @@ Shader "Hidden/Kino/Bloom"
         half3 s3 = DecodeHDR(tex2D(_MainTex, uv + d.xw));
         half3 s4 = DecodeHDR(tex2D(_MainTex, uv + d.zw));
 
-        // Karis's luma weighted average
-        half s1w = 1 / (Luma(s1) + 1);
-        half s2w = 1 / (Luma(s2) + 1);
-        half s3w = 1 / (Luma(s3) + 1);
-        half s4w = 1 / (Luma(s4) + 1);
+        // Karis's luma weighted average (using brightness instead of luma)
+        half s1w = 1 / (Brightness(s1) + 1);
+        half s2w = 1 / (Brightness(s2) + 1);
+        half s3w = 1 / (Brightness(s3) + 1);
+        half s4w = 1 / (Brightness(s4) + 1);
         half one_div_wsum = 1.0 / (s1w + s2w + s3w + s4w);
 
         return (s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w) * one_div_wsum;
@@ -209,11 +206,10 @@ Shader "Hidden/Kino/Bloom"
         half3 m = s0.rgb;
     #endif
 
-        half lm = Luma(m);
     #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
     #endif
-        m *= saturate((lm - _Threshold) / _Cutoff);
+        m *= saturate((Brightness(m) - _Threshold) / _Cutoff);
 
         return EncodeHDR(m);
     }
