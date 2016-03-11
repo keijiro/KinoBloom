@@ -35,7 +35,7 @@ namespace Kino
         /// Prefilter threshold
         /// Filters out pixels under this level of brightness.
         public float threshold {
-            get { return _threshold; }
+            get { return Mathf.Max(_threshold, 0); }
             set { _threshold = value; }
         }
 
@@ -70,7 +70,7 @@ namespace Kino
         /// Bloom intensity
         /// Blend factor of the result image.
         public float intensity {
-            get { return _intensity; }
+            get { return Mathf.Max(_intensity, 0); }
             set { _intensity = value; }
         }
 
