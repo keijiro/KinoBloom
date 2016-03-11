@@ -35,11 +35,11 @@ namespace Kino
         /// Prefilter threshold
         /// Filters out pixels under this level of brightness.
         public float threshold {
-            get { return _threshold; }
+            get { return Mathf.Max(_threshold, 0); }
             set { _threshold = value; }
         }
 
-        [SerializeField, Range(0, 1)]
+        [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
         float _threshold = 0.0f;
 
@@ -72,11 +72,11 @@ namespace Kino
         /// Bloom intensity
         /// Blend factor of the result image.
         public float intensity {
-            get { return _intensity; }
+            get { return Mathf.Max(_intensity, 0); }
             set { _intensity = value; }
         }
 
-        [SerializeField, Range(0, 2)]
+        [SerializeField]
         [Tooltip("Blend factor of the result image.")]
         float _intensity = 1.0f;
 
@@ -153,16 +153,16 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
-            _material.SetFloat("_Threshold", _threshold);
+            _material.SetFloat("_Threshold", threshold);
 
             var pfc = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
-            _material.SetFloat("_Cutoff", _threshold + pfc * 10);
+            _material.SetFloat("_Cutoff", threshold + pfc * 10);
 
             var pfo = !_highQuality && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
 
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
-            _material.SetFloat("_Intensity", _intensity);
+            _material.SetFloat("_Intensity", intensity);
 
             if (_highQuality)
                 _material.EnableKeyword("HIGH_QUALITY");
