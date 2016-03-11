@@ -120,7 +120,7 @@ namespace Kino
             }
             else
             {
-                return Mathf.Max(0, x - _threshold) * _intensity; 
+                return Mathf.Max(0, x - _threshold) * _intensity;
             }
         }
 
@@ -149,7 +149,7 @@ namespace Kino
         }
 
         // Draw a line in the graph rect.
-        void DrawLine(float x1, float y1, float x2, float y2, float grayscale) 
+        void DrawLine(float x1, float y1, float x2, float y2, float grayscale)
         {
             _lineVertices[0] = PointInRect(x1, y1);
             _lineVertices[1] = PointInRect(x2, y2);

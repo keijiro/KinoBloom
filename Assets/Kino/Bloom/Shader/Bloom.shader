@@ -54,7 +54,7 @@ Shader "Hidden/Kino/Bloom"
     // Brightness function
     half Brightness(half3 c)
     {
-       return max(max(c.r, c.g), c.b);
+        return max(max(c.r, c.g), c.b);
     }
 
     // 3-tap median filter
