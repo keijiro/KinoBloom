@@ -120,7 +120,7 @@ Shader "Hidden/Kino/Bloom"
         half s2w = 1 / (Brightness(s2) + 1);
         half s3w = 1 / (Brightness(s3) + 1);
         half s4w = 1 / (Brightness(s4) + 1);
-        half one_div_wsum = 1.0 / (s1w + s2w + s3w + s4w);
+        half one_div_wsum = 1 / (s1w + s2w + s3w + s4w);
 
         return (s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w) * one_div_wsum;
     }
