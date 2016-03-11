@@ -41,7 +41,7 @@ namespace Kino
 
         [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
-        float _threshold = 0.0f;
+        float _threshold = 0.5f;
 
         /// Prefilter exposure value
         /// Controls sensitivity of the effect.
