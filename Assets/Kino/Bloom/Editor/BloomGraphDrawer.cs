@@ -139,7 +139,7 @@ namespace Kino
         {
             x = Mathf.Lerp(_rectGraph.x, _rectGraph.xMax, x / _rangeX);
             y = Mathf.Lerp(_rectGraph.yMax, _rectGraph.y, y / _rangeY);
-            return new Vector3(x, y, 1);
+            return new Vector3(x, y, 0);
         }
 
         // Draw a line in the graph rect.
