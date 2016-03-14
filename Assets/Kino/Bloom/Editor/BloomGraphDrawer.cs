@@ -46,7 +46,7 @@ namespace Kino
             }
 
             _threshold = bloom.threshold;
-            _knee = bloom.softKnee * _threshold;
+            _knee = bloom.softKnee * _threshold + 1e-5f;
             _intensity = bloom.intensity;
         }
 
@@ -113,15 +113,9 @@ namespace Kino
 
         float ResponseFunction(float x)
         {
-            if (Mathf.Abs(x - _threshold) < _knee)
-            {
-                var x2 = x - _threshold + _knee;
-                return 0.25f * x2 * x2 * _intensity / Mathf.Max(_knee, 1e-5f);
-            }
-            else
-            {
-                return Mathf.Max(0, x - _threshold) * _intensity;
-            }
+            var rq = Mathf.Clamp(x - _threshold + _knee, 0, _knee * 2);
+            rq = rq * rq * 0.25f / _knee;
+            return Mathf.Max(rq, x - _threshold) * _intensity;
         }
 
         #endregion

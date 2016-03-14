@@ -210,17 +210,14 @@ Shader "Hidden/Kino/Bloom"
         m = GammaToLinearSpace(m);
     #endif
         // Pixel brightness
-        half br = Brightness(m) + 1e-5;
-
-        // Over-threshold part: linear response
-        half rl = max(br - _Threshold, 0);
+        half br = Brightness(m);
 
         // Under-threshold part: quadratic curve
-        half rq = br - _Curve.y;
-        rq = _Curve.x * rq * rq;
+        half rq = clamp(br - _Curve.x, 0, _Curve.y); 
+        rq = _Curve.z * rq * rq;
 
         // Combine and apply the brightness response curve.
-        m *= lerp(rl, rq, abs(br - _Threshold) < _Curve.z) / br;
+        m *= max(rq, br - _Threshold) / (br + 1e-5);
 
         return EncodeHDR(m);
     }

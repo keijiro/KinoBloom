@@ -154,7 +154,7 @@ namespace Kino
             _material.SetFloat("_Threshold", threshold);
 
             var knee = threshold * _softKnee + 1e-5f;
-            var curve = new Vector3(0.25f / knee, threshold - knee, knee);
+            var curve = new Vector3(threshold - knee, knee * 2, 0.25f / knee);
             _material.SetVector("_Curve", curve);
 
             var pfo = !_highQuality && _antiFlicker;
