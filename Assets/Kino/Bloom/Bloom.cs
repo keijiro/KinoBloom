@@ -48,7 +48,7 @@ namespace Kino
 
         [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
-        float _threshold = 0.9f;
+        float _threshold = 0.8f;
 
         /// Soft-knee coefficient
         /// Makes transition between under/over-threshold gradual.
@@ -72,7 +72,7 @@ namespace Kino
         [SerializeField, Range(0, 5)]
         [Tooltip("Changes extent of veiling effects\n" +
                  "in a screen resolution-independent fashion.")]
-        float _radius = 2;
+        float _radius = 2.5f;
 
         /// Bloom intensity
         /// Blend factor of the result image.
