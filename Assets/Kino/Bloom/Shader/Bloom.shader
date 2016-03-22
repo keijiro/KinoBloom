@@ -47,7 +47,7 @@ Shader "Hidden/Kino/Bloom"
 
     float _PrefilterOffs;
     half _Threshold;
-    half _Cutoff;
+    half3 _Curve;
     float _SampleScale;
     half _Intensity;
 
@@ -209,7 +209,15 @@ Shader "Hidden/Kino/Bloom"
     #if GAMMA_COLOR
         m = GammaToLinearSpace(m);
     #endif
-        m *= saturate((Brightness(m) - _Threshold) / _Cutoff);
+        // Pixel brightness
+        half br = Brightness(m);
+
+        // Under-threshold part: quadratic curve
+        half rq = clamp(br - _Curve.x, 0, _Curve.y);
+        rq = _Curve.z * rq * rq;
+
+        // Combine and apply the brightness response curve.
+        m *= max(rq, br - _Threshold) / (br + 1e-5);
 
         return EncodeHDR(m);
     }

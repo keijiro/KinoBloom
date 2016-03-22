@@ -32,29 +32,34 @@ namespace Kino
     {
         #region Public Properties
 
-        /// Prefilter threshold
+        /// Prefilter threshold (gamma-encoded)
         /// Filters out pixels under this level of brightness.
-        public float threshold {
+        public float thresholdGamma {
             get { return Mathf.Max(_threshold, 0); }
             set { _threshold = value; }
+        }
+
+        /// Prefilter threshold (linearly-encoded)
+        /// Filters out pixels under this level of brightness.
+        public float thresholdLinear {
+            get { return GammaToLinear(_threshold); }
+            set { _threshold = LinearToGamma(value); }
         }
 
         [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
         float _threshold = 0.5f;
 
-        /// Prefilter exposure value
-        /// Controls sensitivity of the effect.
-        /// 0=less sensitive, 1=fully sensitive
-        public float exposure {
-            get { return _exposure; }
-            set { _exposure = value; }
+        /// Soft-knee coefficient
+        /// Makes transition between under/over-threshold gradual.
+        public float softKnee {
+            get { return _softKnee; }
+            set { _softKnee = value; }
         }
 
         [SerializeField, Range(0, 1)]
-        [Tooltip("Sensitivity of the effect.\n"+
-                 "0=less sensitive, 1=fully sensitive")]
-        float _exposure = 0.5f;
+        [Tooltip("Makes transition between under/over-threshold gradual.")]
+        float _softKnee = 0.5f;
 
         /// Bloom radius
         /// Changes extent of veiling effects in a screen
@@ -104,12 +109,36 @@ namespace Kino
 
         #endregion
 
-        #region Private Variables And Properties
+        #region Private Members
 
         [SerializeField, HideInInspector]
         Shader _shader;
 
         Material _material;
+
+        float LinearToGamma(float x)
+        {
+        #if UNITY_5_3_OR_NEWER
+            return Mathf.LinearToGammaSpace(x);
+        #else
+            if (x <= 0.0031308f)
+                return 12.92f * x;
+            else
+                return 1.055f * Mathf.Pow(x, 1 / 2.4f) - 0.055f;
+        #endif
+        }
+
+        float GammaToLinear(float x)
+        {
+        #if UNITY_5_3_OR_NEWER
+            return Mathf.GammaToLinearSpace(x);
+        #else
+            if (x <= 0.04045f)
+                return x / 12.92f;
+            else
+                return Mathf.Pow((x + 0.055f) / 1.055f, 2.4f);
+        #endif
+        }
 
         #endregion
 
@@ -153,10 +182,12 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
-            _material.SetFloat("_Threshold", threshold);
+            var lthresh = thresholdLinear;
+            _material.SetFloat("_Threshold", lthresh);
 
-            var pfc = -Mathf.Log(Mathf.Lerp(1e-2f, 1 - 1e-5f, _exposure), 10);
-            _material.SetFloat("_Cutoff", threshold + pfc * 10);
+            var knee = lthresh * _softKnee + 1e-5f;
+            var curve = new Vector3(lthresh - knee, knee * 2, 0.25f / knee);
+            _material.SetVector("_Curve", curve);
 
             var pfo = !_highQuality && _antiFlicker;
             _material.SetFloat("_PrefilterOffs", pfo ? -0.5f : 0.0f);
