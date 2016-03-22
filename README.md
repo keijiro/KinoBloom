@@ -17,17 +17,14 @@ Unity 5.1 or later versions.
 Effect Properties
 -----------------
 
-- **Threshold** - Filters out the pixels under this level. It's recommended to keep
-  this value as low as possible for natural results.
+- **Threshold** - Filters out pixels under this level of brightness.
 
-- **Exposure** - Controls sensitivity of the effect. The value range is from 0.0
-  (less sensitive) to 1.0 (much sensitive).
+- **Soft Knee** - Makes transition between under/over-threshold gradual.
+
+- **Intensity** - Total intensity of the effect.
 
 - **Radius** - Controls the extent of veiling effects. The value is not related
   to screen size and can be controlled in a resolution-independent fashion.
-
-- **Intensity** - The blend ratio of the result image. It's recommended to keep
-  this value to 1.0 and change slightly if needed.
 
 - **High Quality** - Controls the filter quality and the buffer resolution. On
   mobile platforms, it might strongly affect the performance of the effect,
