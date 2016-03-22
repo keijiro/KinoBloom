@@ -31,12 +31,15 @@ namespace Kino
     public class BloomEditor : Editor
     {
         BloomGraphDrawer _graph;
+
         SerializedProperty _threshold;
         SerializedProperty _softKnee;
         SerializedProperty _intensity;
         SerializedProperty _radius;
         SerializedProperty _highQuality;
         SerializedProperty _antiFlicker;
+
+        static GUIContent _textThreshold = new GUIContent("Threshold (gamma)");
 
         void OnEnable()
         {
@@ -60,7 +63,7 @@ namespace Kino
                 EditorGUILayout.Space();
             }
 
-            EditorGUILayout.PropertyField(_threshold);
+            EditorGUILayout.PropertyField(_threshold, _textThreshold);
             EditorGUILayout.PropertyField(_softKnee);
             EditorGUILayout.PropertyField(_intensity);
             EditorGUILayout.Space();

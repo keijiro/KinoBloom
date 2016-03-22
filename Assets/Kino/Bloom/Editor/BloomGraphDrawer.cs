@@ -36,7 +36,7 @@ namespace Kino
         {
             if (bloom.GetComponent<Camera>().hdr)
             {
-                _rangeX = 5;
+                _rangeX = 6;
                 _rangeY = 1.5f;
             }
             else
@@ -45,7 +45,7 @@ namespace Kino
                 _rangeY = 1;
             }
 
-            _threshold = bloom.threshold;
+            _threshold = bloom.thresholdLinear;
             _knee = bloom.softKnee * _threshold + 1e-5f;
             _intensity = bloom.intensity;
         }
@@ -72,7 +72,7 @@ namespace Kino
             // Label
             Handles.Label(
                 PointInRect(0, _rangeY) + Vector3.right,
-                "Brightness Response", EditorStyles.miniLabel
+                "Brightness Response (linear)", EditorStyles.miniLabel
             );
 
             // Threshold line

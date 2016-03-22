@@ -32,11 +32,18 @@ namespace Kino
     {
         #region Public Properties
 
-        /// Prefilter threshold
+        /// Prefilter threshold (gamma-encoded)
         /// Filters out pixels under this level of brightness.
-        public float threshold {
+        public float thresholdGamma {
             get { return Mathf.Max(_threshold, 0); }
             set { _threshold = value; }
+        }
+
+        /// Prefilter threshold (linearly-encoded)
+        /// Filters out pixels under this level of brightness.
+        public float thresholdLinear {
+            get { return GammaToLinear(_threshold); }
+            set { _threshold = LinearToGamma(value); }
         }
 
         [SerializeField]
@@ -102,12 +109,36 @@ namespace Kino
 
         #endregion
 
-        #region Private Variables And Properties
+        #region Private Members
 
         [SerializeField, HideInInspector]
         Shader _shader;
 
         Material _material;
+
+        float LinearToGamma(float x)
+        {
+        #if UNITY_5_3_OR_NEWER
+            return Mathf.LinearToGammaSpace(x);
+        #else
+            if (x <= 0.0031308f)
+                return 12.92f * x;
+            else
+                return 1.055f * Mathf.Pow(x, 1 / 2.4f) - 0.055f;
+        #endif
+        }
+
+        float GammaToLinear(float x)
+        {
+        #if UNITY_5_3_OR_NEWER
+            return Mathf.GammaToLinearSpace(x);
+        #else
+            if (x <= 0.04045f)
+                return x / 12.92f;
+            else
+                return Mathf.Pow((x + 0.055f) / 1.055f, 2.4f);
+        #endif
+        }
 
         #endregion
 
@@ -151,10 +182,11 @@ namespace Kino
             var iteration = Mathf.Max(2, logh_i);
 
             // update the shader properties
-            _material.SetFloat("_Threshold", threshold);
+            var lthresh = thresholdLinear;
+            _material.SetFloat("_Threshold", lthresh);
 
-            var knee = threshold * _softKnee + 1e-5f;
-            var curve = new Vector3(threshold - knee, knee * 2, 0.25f / knee);
+            var knee = lthresh * _softKnee + 1e-5f;
+            var curve = new Vector3(lthresh - knee, knee * 2, 0.25f / knee);
             _material.SetVector("_Curve", curve);
 
             var pfo = !_highQuality && _antiFlicker;
