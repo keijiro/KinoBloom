@@ -17,9 +17,13 @@ Unity 5.1 or later versions.
 Effect Properties
 -----------------
 
-- **Threshold** - Filters out pixels under this level of brightness.
+![Inspector][Inspector]
 
-- **Soft Knee** - Makes transition between under/over-threshold gradual.
+- **Threshold** - Filters out pixels under this level of brightness. This value
+  should be given in the gamma space (as used in the color picker).
+
+- **Soft Knee** - Makes transition between under/over-threshold gradual (0 =
+  hard threshold, 1 = soft threshold).
 
 - **Intensity** - Total intensity of the effect.
 
@@ -64,3 +68,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [Kino]: https://github.com/search?q=kino+user%3Akeijiro&type=Repositories
 [Image]: https://41.media.tumblr.com/d65affb0f4a7ca6e14ba5d6dd5628428/tumblr_o1i5rqBaYc1qio469o1_640.png
+[Inspector]: https://36.media.tumblr.com/96fb2b51ec0c817bc1b1fdbf5aadbbad/tumblr_o4figiJddx1qio469o1_400.png
