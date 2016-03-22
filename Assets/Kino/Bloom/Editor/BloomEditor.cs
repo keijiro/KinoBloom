@@ -66,9 +66,7 @@ namespace Kino
             EditorGUILayout.PropertyField(_threshold, _textThreshold);
             EditorGUILayout.PropertyField(_softKnee);
             EditorGUILayout.PropertyField(_intensity);
-            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_radius);
-            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_highQuality);
             EditorGUILayout.PropertyField(_antiFlicker);
 
