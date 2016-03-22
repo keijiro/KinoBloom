@@ -48,7 +48,7 @@ namespace Kino
 
         [SerializeField]
         [Tooltip("Filters out pixels under this level of brightness.")]
-        float _threshold = 0.5f;
+        float _threshold = 0.9f;
 
         /// Soft-knee coefficient
         /// Makes transition between under/over-threshold gradual.
@@ -83,7 +83,7 @@ namespace Kino
 
         [SerializeField]
         [Tooltip("Blend factor of the result image.")]
-        float _intensity = 1.0f;
+        float _intensity = 0.8f;
 
         /// High quality mode
         /// Controls filter quality and buffer resolution.
@@ -100,7 +100,7 @@ namespace Kino
         /// Reduces flashing noise with an additional filter.
         [SerializeField]
         [Tooltip("Reduces flashing noise with an additional filter.")]
-        bool _antiFlicker = false;
+        bool _antiFlicker = true;
 
         public bool antiFlicker {
             get { return _antiFlicker; }

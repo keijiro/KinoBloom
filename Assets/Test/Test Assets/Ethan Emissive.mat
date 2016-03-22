@@ -53,20 +53,6 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
-          name: _Occlusion
-        second:
-          m_Texture: {fileID: 2800000, guid: 4e2f32e9a1fefc24092337ae061f3dbc, type: 3}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _SpecGlossMap
-        second:
-          m_Texture: {fileID: 2800000, guid: c6093d6055cd6a44ebf0637f17fca0e8, type: 3}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
           name: _DetailMask
         second:
           m_Texture: {fileID: 0}
@@ -81,13 +67,6 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
-          name: _Cube
-        second:
-          m_Texture: {fileID: 8900000, guid: 6c5668bb9f9669342bfdd3eaddebb56b, type: 2}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
           name: _OcclusionMap
         second:
           m_Texture: {fileID: 2800000, guid: 4e2f32e9a1fefc24092337ae061f3dbc, type: 3}
@@ -98,6 +77,27 @@ Material:
           name: _MetallicGlossMap
         second:
           m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Occlusion
+        second:
+          m_Texture: {fileID: 2800000, guid: 4e2f32e9a1fefc24092337ae061f3dbc, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _SpecGlossMap
+        second:
+          m_Texture: {fileID: 2800000, guid: c6093d6055cd6a44ebf0637f17fca0e8, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Cube
+        second:
+          m_Texture: {fileID: 8900000, guid: 6c5668bb9f9669342bfdd3eaddebb56b, type: 2}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
     m_Floats:
@@ -121,10 +121,6 @@ Material:
         first:
           name: _AlphaTestRef
         second: .5
-      data:
-        first:
-          name: _Lightmapping
-        second: 0
       data:
         first:
           name: _Parallax
@@ -159,6 +155,14 @@ Material:
         second: 0
       data:
         first:
+          name: _Metallic
+        second: .5
+      data:
+        first:
+          name: _Lightmapping
+        second: 0
+      data:
+        first:
           name: _EmissionScaleUI
         second: 1
       data:
@@ -177,15 +181,11 @@ Material:
         first:
           name: _DetailMode
         second: 0
-      data:
-        first:
-          name: _Metallic
-        second: .5
     m_Colors:
       data:
         first:
           name: _EmissionColor
-        second: {r: 1.41176665, g: 3.36551881, b: 8.00000095, a: 1}
+        second: {r: .882363915, g: 2.10344815, b: 5, a: 1}
       data:
         first:
           name: _Color
@@ -196,16 +196,16 @@ Material:
         second: {r: .0980392173, g: .0980392173, b: .0980392173, a: 1}
       data:
         first:
-          name: _SpecularColor
-        second: {r: .242647052, g: .242647052, b: .242647052, a: 1}
-      data:
-        first:
           name: _EmissionColorUI
         second: {r: 0, g: 0, b: 0, a: 1}
       data:
         first:
           name: _EmissionColorWithMapUI
         second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _SpecularColor
+        second: {r: .242647052, g: .242647052, b: .242647052, a: 1}
       data:
         first:
           name: _ReflectColor
