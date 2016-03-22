@@ -213,7 +213,7 @@ Shader "Hidden/Kino/Bloom"
         half br = Brightness(m);
 
         // Under-threshold part: quadratic curve
-        half rq = clamp(br - _Curve.x, 0, _Curve.y); 
+        half rq = clamp(br - _Curve.x, 0, _Curve.y);
         rq = _Curve.z * rq * rq;
 
         // Combine and apply the brightness response curve.

@@ -34,8 +34,8 @@ namespace Kino
 
         SerializedProperty _threshold;
         SerializedProperty _softKnee;
-        SerializedProperty _intensity;
         SerializedProperty _radius;
+        SerializedProperty _intensity;
         SerializedProperty _highQuality;
         SerializedProperty _antiFlicker;
 
@@ -46,8 +46,8 @@ namespace Kino
             _graph = new BloomGraphDrawer();
             _threshold = serializedObject.FindProperty("_threshold");
             _softKnee = serializedObject.FindProperty("_softKnee");
-            _intensity = serializedObject.FindProperty("_intensity");
             _radius = serializedObject.FindProperty("_radius");
+            _intensity = serializedObject.FindProperty("_intensity");
             _highQuality = serializedObject.FindProperty("_highQuality");
             _antiFlicker = serializedObject.FindProperty("_antiFlicker");
         }
