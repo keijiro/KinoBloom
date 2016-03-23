@@ -69,7 +69,7 @@ namespace Kino
             set { _radius = value; }
         }
 
-        [SerializeField, Range(0, 5)]
+        [SerializeField, Range(1, 7)]
         [Tooltip("Changes extent of veiling effects\n" +
                  "in a screen resolution-independent fashion.")]
         float _radius = 2.5f;
@@ -115,6 +115,10 @@ namespace Kino
         Shader _shader;
 
         Material _material;
+
+        const int kMaxIterations = 16;
+        RenderTexture[] _blurBuffer1 = new RenderTexture[kMaxIterations];
+        RenderTexture[] _blurBuffer2 = new RenderTexture[kMaxIterations];
 
         float LinearToGamma(float x)
         {
@@ -177,9 +181,9 @@ namespace Kino
                 RenderTextureFormat.Default : RenderTextureFormat.DefaultHDR;
 
             // determine the iteration count
-            var logh = Mathf.Log(th, 2) + _radius - 6;
+            var logh = Mathf.Log(th, 2) + _radius - 8;
             var logh_i = (int)logh;
-            var iteration = Mathf.Max(2, logh_i);
+            var iterations = Mathf.Clamp(logh_i, 1, kMaxIterations);
 
             // update the shader properties
             var lthresh = thresholdLinear;
@@ -216,48 +220,56 @@ namespace Kino
                 _material.DisableKeyword("GAMMA_COLOR");
             }
 
-            // allocate temporary buffers
-            var rt1 = new RenderTexture[iteration + 1];
-            var rt2 = new RenderTexture[iteration + 1];
+            // prefilter pass
+            var prefiltered = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
+            Graphics.Blit(source, prefiltered, _material, 0);
 
-            for (var i = 0; i < iteration + 1; i++)
+            // construct a mip pyramid
+            var last = prefiltered;
+            for (var level = 0; level < iterations; level++)
             {
-                rt1[i] = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
-                if (i > 0 && i < iteration)
-                    rt2[i] = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
-                tw /= 2;
-                th /= 2;
+                _blurBuffer1[level] = RenderTexture.GetTemporary(
+                    last.width / 2, last.height / 2, 0, rtFormat
+                );
+
+                var pass = (level == 0) ? 1 : 2;
+                Graphics.Blit(last, _blurBuffer1[level], _material, pass);
+
+                last = _blurBuffer1[level];
             }
 
-            // apply the prefilter
-            Graphics.Blit(source, rt1[0], _material, 0);
-
-            // create a mip pyramid
-            Graphics.Blit(rt1[0], rt1[1], _material, 1);
-
-            for (var i = 1; i < iteration; i++)
-                Graphics.Blit(rt1[i], rt1[i + 1], _material, 2);
-
-            // blur and combine loop
-            _material.SetTexture("_BaseTex", rt1[iteration - 1]);
-            Graphics.Blit(rt1[iteration], rt2[iteration - 1], _material, 3);
-
-            for (var i = iteration - 1; i > 1; i--)
+            // upsample and combine loop
+            for (var level = iterations - 2; level >= 0; level--)
             {
-                _material.SetTexture("_BaseTex", rt1[i - 1]);
-                Graphics.Blit(rt2[i],  rt2[i - 1], _material, 3);
+                var basetex = _blurBuffer1[level];
+                _material.SetTexture("_BaseTex", basetex);
+
+                _blurBuffer2[level] = RenderTexture.GetTemporary(
+                    basetex.width, basetex.height, 0, rtFormat
+                );
+
+                Graphics.Blit(last, _blurBuffer2[level], _material, 3);
+                last = _blurBuffer2[level];
             }
 
             // finish process
             _material.SetTexture("_BaseTex", source);
-            Graphics.Blit(rt2[1], destination, _material, 4);
+            Graphics.Blit(last, destination, _material, 4);
 
             // release the temporary buffers
-            for (var i = 0; i < iteration + 1; i++)
+            for (var i = 0; i < kMaxIterations; i++)
             {
-                RenderTexture.ReleaseTemporary(rt1[i]);
-                RenderTexture.ReleaseTemporary(rt2[i]);
+                if (_blurBuffer1[i] != null)
+                    RenderTexture.ReleaseTemporary(_blurBuffer1[i]);
+
+                if (_blurBuffer2[i] != null)
+                    RenderTexture.ReleaseTemporary(_blurBuffer2[i]);
+
+                _blurBuffer1[i] = null;
+                _blurBuffer2[i] = null;
             }
+
+            RenderTexture.ReleaseTemporary(prefiltered);
         }
 
         #endregion
