@@ -42,7 +42,7 @@ namespace Kino
         /// Prefilter threshold (linearly-encoded)
         /// Filters out pixels under this level of brightness.
         public float thresholdLinear {
-            get { return GammaToLinear(_threshold); }
+            get { return GammaToLinear(thresholdGamma); }
             set { _threshold = LinearToGamma(value); }
         }
 

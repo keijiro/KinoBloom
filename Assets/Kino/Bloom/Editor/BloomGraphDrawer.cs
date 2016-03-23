@@ -47,7 +47,9 @@ namespace Kino
 
             _threshold = bloom.thresholdLinear;
             _knee = bloom.softKnee * _threshold + 1e-5f;
-            _intensity = bloom.intensity;
+
+            // Intensity is capped to prevent sampling errors.
+            _intensity = Mathf.Min(bloom.intensity, 10);
         }
 
         // Draw the graph at the current position.
@@ -90,17 +92,23 @@ namespace Kino
                 }
                 else
                 {
-                    // Extend the last segment up to the top edge of the rect.
-                    var v1 = _curveVertices[vcount - 2];
-                    var v2 = _curveVertices[vcount - 1];
-                    var clip = (_rectGraph.y - v1.y) / (v2.y - v1.y);
-                    _curveVertices[vcount - 1] = v1 + (v2 - v1) * clip;
+                    if (vcount > 1)
+                    {
+                        // Extend the last segment to the top edge of the rect.
+                        var v1 = _curveVertices[vcount - 2];
+                        var v2 = _curveVertices[vcount - 1];
+                        var clip = (_rectGraph.y - v1.y) / (v2.y - v1.y);
+                        _curveVertices[vcount - 1] = v1 + (v2 - v1) * clip;
+                    }
                     break;
                 }
             }
 
-            Handles.color = Color.white * 0.9f;
-            Handles.DrawAAPolyLine(2.0f, vcount, _curveVertices);
+            if (vcount > 1)
+            {
+                Handles.color = Color.white * 0.9f;
+                Handles.DrawAAPolyLine(2.0f, vcount, _curveVertices);
+            }
         }
 
         #endregion
@@ -123,7 +131,7 @@ namespace Kino
         #region Graph Functions
 
         // Number of vertices in curve
-        const int _curveResolution = 64;
+        const int _curveResolution = 96;
 
         // Vertex buffers
         Vector3[] _rectVertices = new Vector3[4];
