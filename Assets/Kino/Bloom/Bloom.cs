@@ -198,19 +198,10 @@ namespace Kino
             _material.SetFloat("_SampleScale", 0.5f + logh - logh_i);
             _material.SetFloat("_Intensity", intensity);
 
-            if (_highQuality)
-                _material.EnableKeyword("HIGH_QUALITY");
-            else
-                _material.DisableKeyword("HIGH_QUALITY");
-
-            if (_antiFlicker)
-                _material.EnableKeyword("ANTI_FLICKER");
-            else
-                _material.DisableKeyword("ANTI_FLICKER");
-
             // prefilter pass
             var prefiltered = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
-            Graphics.Blit(source, prefiltered, _material, 0);
+            var pass = _antiFlicker ? 1 : 0;
+            Graphics.Blit(source, prefiltered, _material, pass);
 
             // construct a mip pyramid
             var last = prefiltered;
@@ -220,7 +211,7 @@ namespace Kino
                     last.width / 2, last.height / 2, 0, rtFormat
                 );
 
-                var pass = (level == 0) ? 1 : 2;
+                pass = (level == 0) ? (_antiFlicker ? 3 : 2) : 4;
                 Graphics.Blit(last, _blurBuffer1[level], _material, pass);
 
                 last = _blurBuffer1[level];
@@ -236,13 +227,15 @@ namespace Kino
                     basetex.width, basetex.height, 0, rtFormat
                 );
 
-                Graphics.Blit(last, _blurBuffer2[level], _material, 3);
+                pass = _highQuality ? 6 : 5;
+                Graphics.Blit(last, _blurBuffer2[level], _material, pass);
                 last = _blurBuffer2[level];
             }
 
             // finish process
             _material.SetTexture("_BaseTex", source);
-            Graphics.Blit(last, destination, _material, 4);
+            pass = _highQuality ? 8 : 7;
+            Graphics.Blit(last, destination, _material, pass);
 
             // release the temporary buffers
             for (var i = 0; i < kMaxIterations; i++)
