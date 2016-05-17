@@ -163,7 +163,6 @@ namespace Kino
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             var useRGBM = Application.isMobilePlatform;
-            var isGamma = QualitySettings.activeColorSpace == ColorSpace.Gamma;
 
             // source texture size
             var tw = source.width;
@@ -208,17 +207,6 @@ namespace Kino
                 _material.EnableKeyword("ANTI_FLICKER");
             else
                 _material.DisableKeyword("ANTI_FLICKER");
-
-            if (isGamma)
-            {
-                _material.DisableKeyword("LINEAR_COLOR");
-                _material.EnableKeyword("GAMMA_COLOR");
-            }
-            else
-            {
-                _material.EnableKeyword("LINEAR_COLOR");
-                _material.DisableKeyword("GAMMA_COLOR");
-            }
 
             // prefilter pass
             var prefiltered = RenderTexture.GetTemporary(tw, th, 0, rtFormat);
