@@ -200,7 +200,7 @@ half4 frag_prefilter(v2f_img i) : SV_Target
     rq = _Curve.z * rq * rq;
 
     // Combine and apply the brightness response curve.
-    m *= max(rq, br - _Threshold) / (br + 1e-5);
+    m *= max(rq, br - _Threshold) / max(br, 1e-5);
 
     return EncodeHDR(m);
 }
