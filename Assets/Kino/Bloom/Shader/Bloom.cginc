@@ -31,6 +31,8 @@ sampler2D _MainTex;
 sampler2D _BaseTex;
 float2 _MainTex_TexelSize;
 float2 _BaseTex_TexelSize;
+half4 _MainTex_ST;
+half4 _BaseTex_ST;
 
 float _PrefilterOffs;
 half _Threshold;
@@ -148,6 +150,18 @@ half3 UpsampleFilter(float2 uv)
 // Vertex shader
 //
 
+v2f_img vert(appdata_img v)
+{
+    v2f_img o;
+    o.pos = UnityObjectToClipPos(v.vertex);
+#if UNITY_VERSION >= 540
+    o.uv = UnityStereoScreenSpaceUVAdjust(v.texcoord, _MainTex_ST);
+#else
+    o.uv = v.texcoord;
+#endif
+    return o;
+}
+
 struct v2f_multitex
 {
     float4 pos : SV_POSITION;
@@ -155,12 +169,17 @@ struct v2f_multitex
     float2 uvBase : TEXCOORD1;
 };
 
-v2f_multitex vert_multitex(appdata_full v)
+v2f_multitex vert_multitex(appdata_img v)
 {
     v2f_multitex o;
     o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-    o.uvMain = v.texcoord.xy;
-    o.uvBase = v.texcoord.xy;
+#if UNITY_VERSION >= 540
+    o.uvMain = UnityStereoScreenSpaceUVAdjust(v.texcoord, _MainTex_ST);
+    o.uvBase = UnityStereoScreenSpaceUVAdjust(v.texcoord, _BaseTex_ST);
+#else
+    o.uvMain = v.texcoord;
+    o.uvBase = v.texcoord;
+#endif
 #if UNITY_UV_STARTS_AT_TOP
     if (_BaseTex_TexelSize.y < 0.0)
         o.uvBase.y = 1.0 - v.texcoord.y;
