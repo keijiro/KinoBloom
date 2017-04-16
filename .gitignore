@@ -3,6 +3,7 @@ Library
 Temp
 *.pidb
 *.userprefs
+*.unitypackage
 
 # Misc
 *.swp
