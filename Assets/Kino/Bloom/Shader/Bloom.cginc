@@ -153,13 +153,8 @@ half3 UpsampleFilter(float2 uv)
 v2f_img vert(appdata_img v)
 {
     v2f_img o;
-#if UNITY_VERSION >= 540
     o.pos = UnityObjectToClipPos(v.vertex);
     o.uv = UnityStereoScreenSpaceUVAdjust(v.texcoord, _MainTex_ST);
-#else
-    o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-    o.uv = v.texcoord;
-#endif
     return o;
 }
 
@@ -173,15 +168,9 @@ struct v2f_multitex
 v2f_multitex vert_multitex(appdata_img v)
 {
     v2f_multitex o;
-#if UNITY_VERSION >= 540
     o.pos = UnityObjectToClipPos(v.vertex);
     o.uvMain = UnityStereoScreenSpaceUVAdjust(v.texcoord, _MainTex_ST);
     o.uvBase = UnityStereoScreenSpaceUVAdjust(v.texcoord, _BaseTex_ST);
-#else
-    o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-    o.uvMain = v.texcoord;
-    o.uvBase = v.texcoord;
-#endif
 #if UNITY_UV_STARTS_AT_TOP
     if (_BaseTex_TexelSize.y < 0.0)
         o.uvBase.y = 1.0 - v.texcoord.y;
